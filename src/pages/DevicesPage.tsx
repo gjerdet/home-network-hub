@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Edit2, Monitor, Wifi, Server, HardDrive, Shield, Radio, X, Save, Box, Cpu, Zap, Battery, ChevronDown, ChevronRight, ArrowLeft, ExternalLink, Copy, Network, Route, Cable, Share2, List, LayoutGrid } from "lucide-react";
 import { DeviceSubData } from "@/components/DeviceSubData";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { NetworkTopology } from "@/components/NetworkTopology";
 import { RackView } from "@/components/RackView";
 import { SubNav } from "@/components/SubNav";
@@ -109,7 +110,12 @@ function DeviceDetail({ device, onBack, onEdit, onDelete, onUpdate }: {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => onEdit(device)}><Edit2 className="h-3 w-3 mr-1" /> Rediger</Button>
-          <Button variant="destructive" size="sm" onClick={() => onDelete(device.id)}><Trash2 className="h-3 w-3 mr-1" /> Slett</Button>
+          <ConfirmDialog
+            trigger={<Button variant="destructive" size="sm"><Trash2 className="h-3 w-3 mr-1" /> Slett</Button>}
+            title="Slett enhet"
+            description={`Er du sikker på at du vil slette «${device.name}»? Denne handlingen kan ikke angres.`}
+            onConfirm={() => onDelete(device.id)}
+          />
         </div>
       </div>
 
@@ -332,14 +338,13 @@ export default function DevicesPage() {
         right={
           <div className="flex gap-2">
             {devices.length > 0 && (
-              <Button variant="outline" size="sm" onClick={() => {
-                if (confirm("Er du sikker på at du vil slette alle enheter?")) {
-                  saveDevices([]);
-                  refreshDevices();
-                }
-              }}>
-                <Trash2 className="h-3 w-3 mr-1" /> Slett alle
-              </Button>
+              <ConfirmDialog
+                trigger={<Button variant="outline" size="sm"><Trash2 className="h-3 w-3 mr-1" /> Slett alle</Button>}
+                title="Slett alle enheter"
+                description="Er du sikker på at du vil slette ALLE enheter? Denne handlingen kan ikke angres."
+                confirmLabel="Slett alle"
+                onConfirm={() => { saveDevices([]); refreshDevices(); }}
+              />
             )}
             <Button size="sm" onClick={() => { setShowForm(true); setEditId(null); setForm(emptyDevice); setTagsInput(""); setShowAdvanced(false); }}>
               <Plus className="h-4 w-4 mr-1" /> Ny enhet
@@ -501,7 +506,12 @@ export default function DevicesPage() {
                     <td className="px-3 py-2.5">
                       <div className="flex gap-1">
                         <button onClick={() => handleEdit(d)} className="p-1 text-muted-foreground hover:text-primary"><Edit2 className="h-3.5 w-3.5" /></button>
-                        <button onClick={() => handleDelete(d.id)} className="p-1 text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                        <ConfirmDialog
+                          trigger={<button className="p-1 text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>}
+                          title="Slett enhet"
+                          description={`Er du sikker på at du vil slette «${d.name}»?`}
+                          onConfirm={() => handleDelete(d.id)}
+                        />
                       </div>
                     </td>
                   </tr>

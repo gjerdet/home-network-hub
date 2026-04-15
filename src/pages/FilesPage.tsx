@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { getFiles, addFile, deleteFile, type UploadedFile } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Upload, Trash2, Download, FolderOpen, File } from "lucide-react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 function formatSize(bytes: number) {
   if (bytes < 1024) return bytes + " B";
@@ -60,7 +61,12 @@ export default function FilesPage() {
               <div className="text-xs text-muted-foreground">{formatSize(f.size)} · {new Date(f.createdAt).toLocaleDateString("nb-NO")}</div>
             </div>
             <button onClick={() => handleDownload(f)} className="text-muted-foreground hover:text-primary"><Download className="h-4 w-4" /></button>
-            <button onClick={() => handleDelete(f.id)} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+            <ConfirmDialog
+              trigger={<button className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>}
+              title="Slett fil"
+              description={`Er du sikker på at du vil slette «${f.name}»?`}
+              onConfirm={() => handleDelete(f.id)}
+            />
           </div>
         ))}
       </div>

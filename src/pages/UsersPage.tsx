@@ -3,6 +3,7 @@ import { getUsers, saveUsers, getCurrentUser, updateUser, type User } from "@/li
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, X, Save, Users, Edit2 } from "lucide-react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -102,7 +103,12 @@ export default function UsersPage() {
               <button onClick={() => handleEdit(u)} className="text-muted-foreground hover:text-primary"><Edit2 className="h-4 w-4" /></button>
             )}
             {isAdmin && u.id !== currentUser?.id && (
-              <button onClick={() => handleDelete(u.id)} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+              <ConfirmDialog
+                trigger={<button className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>}
+                title="Slett bruker"
+                description={`Er du sikker på at du vil slette «${u.displayName || u.username}»?`}
+                onConfirm={() => handleDelete(u.id)}
+              />
             )}
           </div>
         ))}

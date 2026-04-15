@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { RuleFlowDiagram } from "@/components/RuleFlowDiagram";
 import { SubNav } from "@/components/SubNav";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 const zoneColors: Record<string, string> = {
   WAN: "bg-destructive/20 text-destructive border-destructive/30",
@@ -297,7 +298,12 @@ function FirewallDetail({ fw, onBack }: { fw: Firewall; onBack: () => void }) {
                       <button onClick={() => moveRule(r.id, -1)} className="p-1 text-muted-foreground hover:text-foreground"><ArrowUp className="h-3 w-3" /></button>
                       <button onClick={() => moveRule(r.id, 1)} className="p-1 text-muted-foreground hover:text-foreground"><ArrowDown className="h-3 w-3" /></button>
                       <button onClick={() => toggleEnabled(r.id)} className="p-1 text-muted-foreground hover:text-foreground">{r.enabled ? <Shield className="h-3 w-3" /> : <ShieldOff className="h-3 w-3" />}</button>
-                      <button onClick={() => handleDelete(r.id)} className="p-1 text-muted-foreground hover:text-destructive"><Trash2 className="h-3 w-3" /></button>
+                      <ConfirmDialog
+                        trigger={<button className="p-1 text-muted-foreground hover:text-destructive"><Trash2 className="h-3 w-3" /></button>}
+                        title="Slett regel"
+                        description={`Er du sikker på at du vil slette regel «${r.name}»?`}
+                        onConfirm={() => handleDelete(r.id)}
+                      />
                     </div>
                   </td>
                 </tr>
@@ -482,7 +488,12 @@ export default function FirewallPage() {
                   <td className="px-3 py-2.5">
                     <div className="flex gap-1">
                       <button onClick={() => handleEdit(fw)} className="p-1 text-muted-foreground hover:text-primary"><Edit2 className="h-3.5 w-3.5" /></button>
-                      <button onClick={() => handleDelete(fw.id)} className="p-1 text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                      <ConfirmDialog
+                        trigger={<button className="p-1 text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>}
+                        title="Slett brannmur"
+                        description={`Er du sikker på at du vil slette «${fw.name}»? Alle tilhørende regler slettes også.`}
+                        onConfirm={() => handleDelete(fw.id)}
+                      />
                     </div>
                   </td>
                 </tr>

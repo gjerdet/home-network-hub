@@ -8,6 +8,7 @@ import {
   FolderOpen, Search, Server, Globe, Copy, Check,
   Settings, AlertTriangle, BookOpen, Clock, Folder, FolderPlus
 } from "lucide-react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 const categories = ["Generelt", "Oppsett", "Konfigurasjon", "Feilsøking", "Prosedyrer"];
 
@@ -482,7 +483,12 @@ export default function DocsPage() {
             <div className="flex gap-2 mt-8 pt-4 border-t border-border">
               <Button variant="outline" size="sm" onClick={() => startEdit(selectedDoc)}><Edit2 className="h-3 w-3 mr-1" /> Rediger</Button>
               <Button variant="outline" size="sm" onClick={() => startNewDoc(selectedDoc.id)}><Plus className="h-3 w-3 mr-1" /> Ny underside</Button>
-              <Button variant="destructive" size="sm" onClick={() => handleDelete(selectedDoc.id)}><Trash2 className="h-3 w-3 mr-1" /> Slett</Button>
+              <ConfirmDialog
+                trigger={<Button variant="destructive" size="sm"><Trash2 className="h-3 w-3 mr-1" /> Slett</Button>}
+                title="Slett dokument"
+                description={`Er du sikker på at du vil slette «${selectedDoc.title}»? Undersider flyttes til toppnivå.`}
+                onConfirm={() => handleDelete(selectedDoc.id)}
+              />
             </div>
           </div>
         ) : (
