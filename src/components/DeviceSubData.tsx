@@ -431,6 +431,13 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                     )}
                   </div>
                 </div>
+                {/* WAN + LAG */}
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="flex items-center gap-2 text-[10px] text-muted-foreground cursor-pointer py-1">
+                    <input type="checkbox" checked={(ifForm as any).isWan || false} onChange={e => setIfForm({ ...ifForm, isWan: e.target.checked } as any)} className="rounded border-border" />
+                    <Globe className="h-3 w-3 text-warning" /> WAN-grensesnitt
+                  </label>
+                </div>
                 {/* Connected device + interface */}
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold">Tilkobling</p>
                 <div className="grid grid-cols-2 gap-3">
