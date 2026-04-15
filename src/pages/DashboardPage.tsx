@@ -48,7 +48,7 @@ const WIDGET_DEFS: { id: string; title: string; defaultLayout: { w: number; h: n
   { id: "topology", title: "Nettverkstopologi", defaultLayout: { w: 12, h: 10, minW: 6, minH: 6 } },
 ];
 
-const buildDefaultLayouts = (): { lg: LayoutItemItem[] } => {
+const buildDefaultLayouts = (): { lg: LayoutItem[] } => {
   let y = 0;
   const lg: LayoutItem[] = WIDGET_DEFS.map(def => {
     const item: LayoutItem = {
