@@ -13,6 +13,7 @@ import NetworksPage from "./pages/NetworksPage";
 import FilesPage from "./pages/FilesPage";
 import UsersPage from "./pages/UsersPage";
 import SearchPage from "./pages/SearchPage";
+import IPAMPage from "./pages/IPAMPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/docs" element={<ProtectedRoute><DocsPage /></ProtectedRoute>} />
           <Route path="/firewall" element={<ProtectedRoute><FirewallPage /></ProtectedRoute>} />
           <Route path="/networks" element={<ProtectedRoute><NetworksPage /></ProtectedRoute>} />
+          <Route path="/ipam" element={<ProtectedRoute><IPAMPage /></ProtectedRoute>} />
           <Route path="/files" element={<ProtectedRoute><FilesPage /></ProtectedRoute>} />
           <Route path="/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
           <Route path="/search" element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
