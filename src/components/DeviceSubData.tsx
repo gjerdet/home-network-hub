@@ -24,6 +24,8 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
   // Interfaces
   const [showIfForm, setShowIfForm] = useState(false);
   const [showBulkForm, setShowBulkForm] = useState(false);
+  const [editingIfaceId, setEditingIfaceId] = useState<string | null>(null);
+  const [editIfForm, setEditIfForm] = useState<Partial<DeviceInterface>>({});
   const [ifForm, setIfForm] = useState({ name: "", type: "ethernet" as DeviceInterface["type"], ip: "", mac: "", speed: "", enabled: true, description: "", connectedTo: "", vlanId: "" });
   const [bulkForm, setBulkForm] = useState({ prefix: "eth", start: 0, count: 24, type: "ethernet" as DeviceInterface["type"], speed: "1G" });
 
