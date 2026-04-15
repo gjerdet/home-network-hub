@@ -1,18 +1,19 @@
 import { useState, useEffect } from "react";
-import { getNetworks, addNetwork, deleteNetwork, updateNetwork, type NetworkInfo } from "@/lib/store";
+import { getNetworks, addNetwork, deleteNetwork, updateNetwork, getFirewalls, type NetworkInfo, type Firewall } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, X, Save, Globe, Edit2, Wifi, Server } from "lucide-react";
+import { Plus, Trash2, X, Save, Globe, Edit2, Wifi, Server, Shield } from "lucide-react";
 
-const emptyForm = { name: "", subnet: "", vlan: "", gateway: "", dhcpRange: "", dns1: "", dns2: "", wanAddress: "", wanGateway: "", wanType: "dhcp" as NetworkInfo["wanType"], domain: "", description: "" };
+const emptyForm = { name: "", subnet: "", vlan: "", gateway: "", dhcpRange: "", dns1: "", dns2: "", wanAddress: "", wanGateway: "", wanType: "dhcp" as NetworkInfo["wanType"], domain: "", description: "", firewallId: "" };
 
 export default function NetworksPage() {
   const [networks, setNetworks] = useState<NetworkInfo[]>([]);
+  const [firewalls, setFirewalls] = useState<Firewall[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
 
-  useEffect(() => { setNetworks(getNetworks()); }, []);
+  useEffect(() => { setNetworks(getNetworks()); setFirewalls(getFirewalls()); }, []);
 
   const handleSave = () => {
     if (!form.name || !form.subnet) return;
@@ -33,6 +34,7 @@ export default function NetworksPage() {
       dhcpRange: n.dhcpRange || "", dns1: n.dns1 || "", dns2: n.dns2 || "",
       wanAddress: n.wanAddress || "", wanGateway: n.wanGateway || "",
       wanType: n.wanType || "dhcp", domain: n.domain || "", description: n.description || "",
+      firewallId: n.firewallId || "",
     });
     setEditId(n.id);
     setShowForm(true);
