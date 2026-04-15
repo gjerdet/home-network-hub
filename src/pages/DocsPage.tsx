@@ -146,7 +146,7 @@ export default function DocsPage() {
   const reload = () => setDocs(getDocs());
 
   const handleSave = () => {
-    if (!form.title) return;
+    if (!form.title.trim()) return;
     const tags = form.tags.split(",").map(t => t.trim()).filter(Boolean);
     const payload = {
       title: form.title,
