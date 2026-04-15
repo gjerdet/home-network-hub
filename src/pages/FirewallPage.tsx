@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { getFirewallRules, addFirewallRule, deleteFirewallRule, saveFirewallRules, type FirewallRule, type FirewallZone } from "@/lib/store";
+import { getFirewallRules, addFirewallRule, deleteFirewallRule, saveFirewallRules, getNetworks, type FirewallRule, type FirewallZone } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, X, Save, Flame, ArrowUp, ArrowDown, Shield, ShieldOff, ChevronDown, ChevronRight, LayoutGrid, List } from "lucide-react";
 import { RuleFlowDiagram } from "@/components/RuleFlowDiagram";
 
-const zones: FirewallZone[] = ["WAN", "LAN", "DMZ", "WLAN", "VPN", "MGMT", "IOT", "GUEST"];
+const defaultZones: string[] = ["WAN", "LAN", "DMZ", "WLAN", "VPN", "MGMT", "IOT", "GUEST"];
 
 const zoneColors: Record<string, string> = {
   WAN: "bg-destructive/20 text-destructive border-destructive/30",
