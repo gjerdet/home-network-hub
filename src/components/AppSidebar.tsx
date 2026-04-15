@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Monitor, FileText, Flame, Globe, FolderOpen, Users, LogOut, Download, Upload } from "lucide-react";
+import { Monitor, FileText, Flame, Globe, FolderOpen, Users, LogOut, Download, Upload, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { logout } from "@/lib/store";
@@ -23,6 +23,7 @@ const navItems = [
   { title: "Nettverk", url: "/networks", icon: Globe },
   { title: "Filer", url: "/files", icon: FolderOpen },
   { title: "Brukere", url: "/users", icon: Users },
+  { title: "Innstillingar", url: "/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
