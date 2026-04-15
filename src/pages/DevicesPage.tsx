@@ -153,6 +153,9 @@ function DeviceDetail({ device, onBack, onEdit, onDelete, onUpdate }: {
                   </div>
                 </div>
               )}
+              {device.firewallId && (() => { const fws = getFirewalls(); const fw = fws.find(f => f.id === device.firewallId); return fw ? (
+                <InfoRow label="Brannmur" value={fw.name} />
+              ) : null; })()}
             </Panel>
 
             <Panel title="Plassering">
@@ -387,9 +390,19 @@ export default function DevicesPage() {
                 {Object.entries(statusBadge).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
               </select>
             </div>
+            </div>
+
+          <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-3 mt-6">Brannmur</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div><label className="text-xs text-muted-foreground mb-1 block">Tilknyttet brannmur</label>
+              <select value={form.firewallId} onChange={e => setForm({ ...form, firewallId: e.target.value })} className={selectClass}>
+                <option value="">Ingen</option>
+                {firewalls.map(fw => <option key={fw.id} value={fw.id}>{fw.name}{fw.ip ? ` (${fw.ip})` : ""}</option>)}
+              </select>
+            </div>
           </div>
 
-          <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-3 mt-6">Programvare</p>
+
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div><label className="text-xs text-muted-foreground mb-1 block">Operativsystem</label>
               <Input list="os-list" value={form.os} onChange={e => setForm({ ...form, os: e.target.value })} placeholder="Skriv eller velg OS..." className="bg-secondary border-border" />
