@@ -22,7 +22,9 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
 
   // Interfaces
   const [showIfForm, setShowIfForm] = useState(false);
+  const [showBulkForm, setShowBulkForm] = useState(false);
   const [ifForm, setIfForm] = useState({ name: "", type: "ethernet" as DeviceInterface["type"], ip: "", mac: "", speed: "", enabled: true, description: "", connectedTo: "", vlanId: "" });
+  const [bulkForm, setBulkForm] = useState({ prefix: "eth", start: 0, count: 24, type: "ethernet" as DeviceInterface["type"], speed: "1G" });
 
   const addInterface = () => {
     if (!ifForm.name) return;
@@ -31,6 +33,26 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
     onUpdate();
     setShowIfForm(false);
     setIfForm({ name: "", type: "ethernet", ip: "", mac: "", speed: "", enabled: true, description: "", connectedTo: "", vlanId: "" });
+  };
+
+  const addBulkInterfaces = () => {
+    if (!bulkForm.prefix || bulkForm.count < 1) return;
+    const existing = device.interfaces || [];
+    const newIfaces: DeviceInterface[] = [];
+    for (let i = 0; i < bulkForm.count; i++) {
+      newIfaces.push({
+        id: crypto.randomUUID(),
+        name: `${bulkForm.prefix}${bulkForm.start + i}`,
+        type: bulkForm.type,
+        speed: bulkForm.speed,
+        enabled: true,
+        ip: "", mac: "", description: "", connectedTo: "", vlanId: "",
+      });
+    }
+    updateDevice(device.id, { interfaces: [...existing, ...newIfaces] });
+    onUpdate();
+    setShowBulkForm(false);
+    setBulkForm({ prefix: "eth", start: 0, count: 24, type: "ethernet", speed: "1G" });
   };
 
   const removeInterface = (id: string) => {
