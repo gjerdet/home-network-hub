@@ -92,8 +92,22 @@ export interface DocPage {
   updatedAt: string;
 }
 
+export interface Firewall {
+  id: string;
+  name: string;
+  manufacturer?: string;
+  model?: string;
+  ip?: string;
+  os?: string;
+  description?: string;
+  status: "online" | "offline" | "maintenance";
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface FirewallRule {
   id: string;
+  firewallId: string; // which firewall this rule belongs to
   name: string;
   action: "allow" | "deny" | "reject";
   protocol: string;
