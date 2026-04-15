@@ -42,7 +42,7 @@ const emptyDevice = {
   name: "", ip: "", mac: "", type: "router" as DeviceType, role: "", status: "online" as Device["status"],
   location: "", manufacturer: "", model: "", serialNumber: "", os: "", osVersion: "", firmware: "",
   cpuCores: undefined as number | undefined, ramGb: undefined as number | undefined, storageGb: undefined as number | undefined,
-  primaryInterface: "", managementIp: "", site: "", rack: "", rackPosition: "", tenant: "",
+  primaryInterface: "", managementIp: "", managementVlan: "", site: "", rack: "", rackPosition: "", tenant: "",
   assetTag: "", purchaseDate: "", warrantyEnd: "", notes: "", tags: [] as string[], firewallId: "",
 };
 
