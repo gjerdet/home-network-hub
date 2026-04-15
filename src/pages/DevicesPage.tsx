@@ -285,7 +285,7 @@ export default function DevicesPage() {
       primaryInterface: d.primaryInterface || "", managementIp: d.managementIp || "",
       site: d.site || "", rack: d.rack || "", rackPosition: d.rackPosition || "",
       tenant: d.tenant || "", assetTag: d.assetTag || "", purchaseDate: d.purchaseDate || "",
-      warrantyEnd: d.warrantyEnd || "", notes: d.notes || "", tags: d.tags || [],
+      warrantyEnd: d.warrantyEnd || "", notes: d.notes || "", tags: d.tags || [], firewallId: d.firewallId || "",
     });
     setTagsInput((d.tags || []).join(", "));
     setEditId(d.id);
