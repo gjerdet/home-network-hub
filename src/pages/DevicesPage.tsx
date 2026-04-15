@@ -546,7 +546,17 @@ export default function DevicesPage() {
               <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-3 mt-6">Management VLAN</p>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div><label className="text-xs text-muted-foreground mb-1 block">Management VLAN</label>
-                  <Input value={(form as any).managementVlan || ""} onChange={e => setForm({ ...form, managementVlan: e.target.value } as any)} placeholder="f.eks. 100" className="bg-secondary border-border" />
+                  {(() => {
+                    const nets = getNetworks().filter(n => n.vlan);
+                    return nets.length > 0 ? (
+                      <select value={form.managementVlan} onChange={e => setForm({ ...form, managementVlan: e.target.value })} className={selectClass}>
+                        <option value="">Ingen</option>
+                        {nets.map(n => <option key={n.id} value={n.vlan!}>VLAN {n.vlan} – {n.name}</option>)}
+                      </select>
+                    ) : (
+                      <Input value={form.managementVlan} onChange={e => setForm({ ...form, managementVlan: e.target.value })} placeholder="f.eks. 100" className="bg-secondary border-border" />
+                    );
+                  })()}
                 </div>
               </div>
             </>
