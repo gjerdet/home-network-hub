@@ -120,13 +120,7 @@ export interface NetworkInfo {
   description?: string;
 }
 
-export const updateNetwork = (id: string, updates: Partial<NetworkInfo>) => {
-  saveNetworks(getNetworks().map(n => n.id === id ? { ...n, ...updates } : n));
-};
-
-export const updateFirewallRule = (id: string, updates: Partial<FirewallRule>) => {
-  saveFirewallRules(getFirewallRules().map(r => r.id === id ? { ...r, ...updates } : r));
-};
+// updateNetwork and updateFirewallRule are defined below their respective save functions
 
 export interface UploadedFile {
   id: string;
