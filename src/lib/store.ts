@@ -111,8 +111,22 @@ export interface NetworkInfo {
   vlan?: string;
   gateway?: string;
   dhcpRange?: string;
+  dns1?: string;
+  dns2?: string;
+  wanAddress?: string;
+  wanGateway?: string;
+  wanType?: "static" | "dhcp" | "pppoe";
+  domain?: string;
   description?: string;
 }
+
+export const updateNetwork = (id: string, updates: Partial<NetworkInfo>) => {
+  saveNetworks(getNetworks().map(n => n.id === id ? { ...n, ...updates } : n));
+};
+
+export const updateFirewallRule = (id: string, updates: Partial<FirewallRule>) => {
+  saveFirewallRules(getFirewallRules().map(r => r.id === id ? { ...r, ...updates } : r));
+};
 
 export interface UploadedFile {
   id: string;
