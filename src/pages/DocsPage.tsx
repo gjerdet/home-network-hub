@@ -423,11 +423,8 @@ export default function DocsPage() {
               </div>
             )}
 
-            {/* Content */}
-            <div
-              className="prose prose-invert max-w-none text-sm [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-3 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-5 [&_h2]:mb-2 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2 [&_p]:mb-2 [&_p]:text-secondary-foreground [&_ul]:ml-4 [&_ul]:list-disc [&_ol]:ml-4 [&_ol]:list-decimal [&_li]:text-secondary-foreground [&_li]:mb-1 [&_blockquote]:border-l-2 [&_blockquote]:border-primary/40 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground [&_code]:bg-secondary [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-primary [&_code]:text-xs [&_pre]:bg-secondary/50 [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:border [&_pre]:border-border [&_pre]:overflow-x-auto [&_a]:text-primary [&_a]:underline [&_hr]:border-border [&_hr]:my-4 [&_strong]:text-foreground"
-              dangerouslySetInnerHTML={{ __html: selectedDoc.content }}
-            />
+            {/* Content with copy buttons on code blocks */}
+            <DocContent html={selectedDoc.content} />
 
             <div className="flex gap-2 mt-8 pt-4 border-t border-border">
               <Button variant="outline" size="sm" onClick={() => startEdit(selectedDoc)}><Edit2 className="h-3 w-3 mr-1" /> Rediger</Button>
