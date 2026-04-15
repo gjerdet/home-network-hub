@@ -33,8 +33,8 @@ export default function FirewallPage() {
 
   // Build zones from user's networks + defaults
   const networks = getNetworks();
-  const networkZones = networks.map(n => n.name.toUpperCase());
-  const zones = [...new Set([...networkZones, ...defaultZones])].sort();
+  const networkZones = networks.map(n => n.name);
+  const zones = networkZones.length > 0 ? networkZones : ["LAN", "WAN"];
 
   const emptyForm = {
     name: "", action: "allow" as FirewallRule["action"], protocol: "TCP",
