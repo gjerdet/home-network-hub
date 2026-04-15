@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Monitor, Globe, Flame, FileText, Server, Shield, Wifi,
   HardDrive, Activity, AlertTriangle, CheckCircle2, Clock,
-  ArrowRight, Network, Cable
+  ArrowRight, Network, Cable, ExternalLink, AppWindow
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,14 @@ import {
   getDevices, getNetworks, getFirewalls, getFirewallRules,
   getDocs, getFiles, Device
 } from "@/lib/store";
+import type { ServiceLink } from "@/pages/ServicesPage";
+
+const getServices = (): ServiceLink[] => {
+  try {
+    const raw = localStorage.getItem("netdocs_services");
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+};
 
 const typeIcons: Record<string, React.ElementType> = {
   router: Globe, switch: Network, server: Server, ap: Wifi,
@@ -246,6 +254,50 @@ export default function DashboardPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Services */}
+      {(() => {
+        const services = getServices();
+        if (services.length === 0) return null;
+        const getFavicon = (url: string) => {
+          try { return `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=32`; }
+          catch { return null; }
+        };
+        return (
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-semibold text-foreground">Tenester</CardTitle>
+              <button onClick={() => navigate("/services")} className="text-xs text-primary hover:underline flex items-center gap-1">
+                Vis alle <ArrowRight className="h-3 w-3" />
+              </button>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
+                {services.map(s => {
+                  const favicon = getFavicon(s.url);
+                  return (
+                    <a
+                      key={s.id}
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 p-2.5 rounded-md border border-border hover:border-primary/40 hover:bg-muted/30 transition-colors group"
+                    >
+                      {favicon ? (
+                        <img src={favicon} alt="" className="h-5 w-5 shrink-0 rounded" onError={e => (e.currentTarget.style.display = "none")} />
+                      ) : (
+                        <AppWindow className="h-5 w-5 text-primary shrink-0" />
+                      )}
+                      <span className="text-xs text-foreground truncate">{s.name}</span>
+                      <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </a>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Network topology */}
       {devices.length > 0 && (
