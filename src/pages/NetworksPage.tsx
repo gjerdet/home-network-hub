@@ -3,6 +3,7 @@ import { getNetworks, addNetwork, deleteNetwork, updateNetwork, getFirewalls, ty
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, X, Save, Globe, Edit2, Wifi, Server, Shield } from "lucide-react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 const emptyForm = { name: "", subnet: "", vlan: "", gateway: "", dhcpRange: "", dns1: "", dns2: "", wanAddress: "", wanGateway: "", wanType: "dhcp" as NetworkInfo["wanType"], domain: "", description: "", firewallId: "" };
 
@@ -117,7 +118,12 @@ export default function NetworksPage() {
               <h3 className="font-semibold text-foreground text-lg">{n.name}</h3>
               <div className="flex gap-1">
                 <button onClick={() => handleEdit(n)} className="text-muted-foreground hover:text-primary p-1"><Edit2 className="h-4 w-4" /></button>
-                <button onClick={() => { deleteNetwork(n.id); setNetworks(getNetworks()); }} className="text-muted-foreground hover:text-destructive p-1"><Trash2 className="h-4 w-4" /></button>
+                <ConfirmDialog
+                  trigger={<button className="text-muted-foreground hover:text-destructive p-1"><Trash2 className="h-4 w-4" /></button>}
+                  title="Slett nettverk"
+                  description={`Er du sikker på at du vil slette «${n.name}»?`}
+                  onConfirm={() => { deleteNetwork(n.id); setNetworks(getNetworks()); }}
+                />
               </div>
             </div>
             <div className="space-y-2 text-sm">
