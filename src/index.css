@@ -108,3 +108,19 @@
 .ProseMirror hr { border-color: hsl(var(--border)); margin: 1rem 0; }
 .ProseMirror a { color: hsl(var(--primary)); text-decoration: underline; }
 .ProseMirror strong { color: hsl(var(--foreground)); }
+
+/* react-grid-layout */
+.react-grid-item.react-grid-placeholder {
+  background: hsl(var(--primary) / 0.15) !important;
+  border: 2px dashed hsl(var(--primary) / 0.4) !important;
+  border-radius: var(--radius);
+  opacity: 1 !important;
+}
+.react-grid-item > .react-resizable-handle::after {
+  border-color: hsl(var(--muted-foreground)) !important;
+}
+.react-grid-item.resizing,
+.react-grid-item.react-draggable-dragging {
+  z-index: 50;
+  opacity: 0.9;
+}
