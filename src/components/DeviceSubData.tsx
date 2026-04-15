@@ -251,6 +251,46 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                             )}
                           </div>
                         </div>
+                        {/* WAN + LAG */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="flex items-center gap-2 text-[10px] text-muted-foreground cursor-pointer py-1">
+                              <input type="checkbox" checked={editIfForm.isWan || false} onChange={e => setEditIfForm({ ...editIfForm, isWan: e.target.checked })} className="rounded border-border" />
+                              <Globe className="h-3 w-3 text-warning" /> WAN-grensesnitt
+                            </label>
+                          </div>
+                          {editIfForm.type !== "lag" && (
+                            <div>
+                              <label className="text-[10px] text-muted-foreground block mb-0.5">LAG-gruppe (medlem av)</label>
+                              <select value={editIfForm.lagGroup || ""} onChange={e => setEditIfForm({ ...editIfForm, lagGroup: e.target.value })} className={selectClass}>
+                                <option value="">Ingen</option>
+                                {ifaces.filter(i => i.type === "lag" && i.id !== editingIfaceId).map(i => (
+                                  <option key={i.id} value={i.name}>{i.name}</option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                          {editIfForm.type === "lag" && (
+                            <div>
+                              <label className="text-[10px] text-muted-foreground block mb-0.5">LAG-medlemmer</label>
+                              <div className="bg-secondary border border-border rounded-md p-1.5 max-h-24 overflow-y-auto space-y-0.5">
+                                {ifaces.filter(i => i.type === "ethernet" && i.id !== editingIfaceId).map(i => {
+                                  const members = editIfForm.lagMembers || [];
+                                  const isMember = members.includes(i.id);
+                                  return (
+                                    <label key={i.id} className="flex items-center gap-1.5 text-[10px] cursor-pointer hover:bg-background rounded px-1 py-0.5">
+                                      <input type="checkbox" checked={isMember} onChange={e => {
+                                        const next = e.target.checked ? [...members, i.id] : members.filter(m => m !== i.id);
+                                        setEditIfForm({ ...editIfForm, lagMembers: next });
+                                      }} className="rounded border-border" />
+                                      <span className="font-mono text-foreground">{i.name}</span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                         {/* Tagged VLANs for trunk/hybrid */}
                         {(editIfForm.mode === "trunk" || editIfForm.mode === "hybrid") && availableVlans.length > 0 && (
                           <div>
