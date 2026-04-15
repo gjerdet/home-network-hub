@@ -427,62 +427,71 @@ export default function DevicesPage() {
         </div>
       )}
 
+      {/* Topology view */}
+      {viewMode === "topology" && (
+        <div className="bg-card border border-border rounded-lg overflow-hidden">
+          <NetworkTopology devices={devices} />
+        </div>
+      )}
+
       {/* Device table */}
-      <div className="bg-card border border-border rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border text-left text-muted-foreground bg-secondary/50">
-              <th className="px-3 py-2.5 font-medium text-xs">Navn</th>
-              <th className="px-3 py-2.5 font-medium text-xs">Status</th>
-              <th className="px-3 py-2.5 font-medium text-xs">Type</th>
-              <th className="px-3 py-2.5 font-medium text-xs">Rolle</th>
-              <th className="px-3 py-2.5 font-medium text-xs">IP</th>
-              <th className="px-3 py-2.5 font-medium text-xs">OS</th>
-              <th className="px-3 py-2.5 font-medium text-xs">Site</th>
-              <th className="px-3 py-2.5 font-medium text-xs w-20"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(d => {
-              const s = statusBadge[d.status];
-              return (
-                <tr key={d.id} className="border-b border-border hover:bg-secondary/30 transition-colors">
-                  <td className="px-3 py-2.5">
-                    <button onClick={() => setSelectedDevice(d)} className="text-primary hover:underline font-medium text-sm flex items-center gap-2">
-                      <span className={`w-6 h-6 rounded flex items-center justify-center text-xs ${typeColors[d.type]}`}>{typeIcons[d.type]}</span>
-                      {d.name}
-                    </button>
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border ${s.bg}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-                      {s.label}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2.5 text-xs text-muted-foreground">{typeLabels[d.type]}</td>
-                  <td className="px-3 py-2.5 text-xs text-foreground">{d.role || "—"}</td>
-                  <td className="px-3 py-2.5 text-xs font-mono text-foreground">{d.ip}</td>
-                  <td className="px-3 py-2.5 text-xs text-muted-foreground">{d.os ? `${d.os}${d.osVersion ? ` ${d.osVersion}` : ""}` : "—"}</td>
-                  <td className="px-3 py-2.5 text-xs text-muted-foreground">{d.site || "—"}</td>
-                  <td className="px-3 py-2.5">
-                    <div className="flex gap-1">
-                      <button onClick={() => handleEdit(d)} className="p-1 text-muted-foreground hover:text-primary"><Edit2 className="h-3.5 w-3.5" /></button>
-                      <button onClick={() => handleDelete(d.id)} className="p-1 text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        {filtered.length === 0 && (
-          <div className="text-center py-16 text-muted-foreground">
-            <Monitor className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>Ingen enheter funnet</p>
-            {devices.length === 0 && <p className="text-sm mt-1">Klikk "Ny enhet" for å komme i gang</p>}
-          </div>
-        )}
-      </div>
+      {viewMode === "list" && (
+        <div className="bg-card border border-border rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-left text-muted-foreground bg-secondary/50">
+                <th className="px-3 py-2.5 font-medium text-xs">Navn</th>
+                <th className="px-3 py-2.5 font-medium text-xs">Status</th>
+                <th className="px-3 py-2.5 font-medium text-xs">Type</th>
+                <th className="px-3 py-2.5 font-medium text-xs">Rolle</th>
+                <th className="px-3 py-2.5 font-medium text-xs">IP</th>
+                <th className="px-3 py-2.5 font-medium text-xs">OS</th>
+                <th className="px-3 py-2.5 font-medium text-xs">Site</th>
+                <th className="px-3 py-2.5 font-medium text-xs w-20"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(d => {
+                const s = statusBadge[d.status];
+                return (
+                  <tr key={d.id} className="border-b border-border hover:bg-secondary/30 transition-colors">
+                    <td className="px-3 py-2.5">
+                      <button onClick={() => setSelectedDevice(d)} className="text-primary hover:underline font-medium text-sm flex items-center gap-2">
+                        <span className={`w-6 h-6 rounded flex items-center justify-center text-xs ${typeColors[d.type]}`}>{typeIcons[d.type]}</span>
+                        {d.name}
+                      </button>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border ${s.bg}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+                        {s.label}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 text-xs text-muted-foreground">{typeLabels[d.type]}</td>
+                    <td className="px-3 py-2.5 text-xs text-foreground">{d.role || "—"}</td>
+                    <td className="px-3 py-2.5 text-xs font-mono text-foreground">{d.ip}</td>
+                    <td className="px-3 py-2.5 text-xs text-muted-foreground">{d.os ? `${d.os}${d.osVersion ? ` ${d.osVersion}` : ""}` : "—"}</td>
+                    <td className="px-3 py-2.5 text-xs text-muted-foreground">{d.site || "—"}</td>
+                    <td className="px-3 py-2.5">
+                      <div className="flex gap-1">
+                        <button onClick={() => handleEdit(d)} className="p-1 text-muted-foreground hover:text-primary"><Edit2 className="h-3.5 w-3.5" /></button>
+                        <button onClick={() => handleDelete(d.id)} className="p-1 text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {filtered.length === 0 && (
+            <div className="text-center py-16 text-muted-foreground">
+              <Monitor className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p>Ingen enheter funnet</p>
+              {devices.length === 0 && <p className="text-sm mt-1">Klikk "Ny enhet" for å komme i gang</p>}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Stats bar */}
       {devices.length > 0 && (
