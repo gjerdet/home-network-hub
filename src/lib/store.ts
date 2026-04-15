@@ -222,6 +222,9 @@ export const addFirewallRule = (r: Omit<FirewallRule, "id">) => {
 export const deleteFirewallRule = (id: string) => {
   saveFirewallRules(getFirewallRules().filter(r => r.id !== id));
 };
+export const updateFirewallRule = (id: string, updates: Partial<FirewallRule>) => {
+  saveFirewallRules(getFirewallRules().map(r => r.id === id ? { ...r, ...updates } : r));
+};
 
 // Networks
 export const getNetworks = (): NetworkInfo[] => getItem(KEYS.networks, []);
