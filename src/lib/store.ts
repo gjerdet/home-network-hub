@@ -236,6 +236,9 @@ export const addNetwork = (n: Omit<NetworkInfo, "id">) => {
 export const deleteNetwork = (id: string) => {
   saveNetworks(getNetworks().filter(n => n.id !== id));
 };
+export const updateNetwork = (id: string, updates: Partial<NetworkInfo>) => {
+  saveNetworks(getNetworks().map(n => n.id === id ? { ...n, ...updates } : n));
+};
 
 // Files
 export const getFiles = (): UploadedFile[] => getItem(KEYS.files, []);
