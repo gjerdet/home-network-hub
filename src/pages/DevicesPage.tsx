@@ -72,8 +72,112 @@ function Panel({ title, children, defaultOpen = true }: { title: string; childre
 }
 
 // ═══════════════════════════════════════════
-// Device Detail View (NetBox-style)
+// SSID Manager for AP devices
 // ═══════════════════════════════════════════
+const ssidSecurityOptions = ["WPA2-Personal", "WPA2-Enterprise", "WPA3-Personal", "WPA3-Enterprise", "Open", "WEP"];
+const ssidBandOptions: DeviceSSID["band"][] = ["2.4GHz", "5GHz", "6GHz", "dual", "tri"];
+
+function SSIDManager({ device, onUpdate, networks }: { device: Device; onUpdate: () => void; networks: { vlan?: string; name: string }[] }) {
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ name: "", vlan: "", band: "dual" as DeviceSSID["band"], security: "WPA2-Personal", enabled: true });
+  const ssids = device.ssids || [];
+  const availableVlans = networks.filter(n => n.vlan).map(n => ({ vlan: n.vlan!, name: n.name }));
+  const selectClass = "w-full h-9 rounded-md bg-secondary border border-border px-3 text-sm text-foreground";
+
+  const addSSID = () => {
+    if (!form.name) return;
+    const newSSID: DeviceSSID = { id: crypto.randomUUID(), ...form };
+    updateDevice(device.id, { ssids: [...ssids, newSSID] });
+    onUpdate();
+    setShowForm(false);
+    setForm({ name: "", vlan: "", band: "dual", security: "WPA2-Personal", enabled: true });
+  };
+
+  const removeSSID = (id: string) => {
+    updateDevice(device.id, { ssids: ssids.filter(s => s.id !== id) });
+    onUpdate();
+  };
+
+  const toggleSSID = (id: string) => {
+    updateDevice(device.id, { ssids: ssids.map(s => s.id === id ? { ...s, enabled: !s.enabled } : s) });
+    onUpdate();
+  };
+
+  return (
+    <div className="border-t border-border p-4">
+      {ssids.length > 0 && (
+        <div className="space-y-2 mb-3">
+          {ssids.map(ssid => (
+            <div key={ssid.id} className="flex items-center gap-3 bg-background rounded-md border border-border p-3 text-xs">
+              <Wifi className="h-3.5 w-3.5 text-primary" />
+              <span className="font-medium text-foreground">{ssid.name}</span>
+              {ssid.vlan && <span className="bg-primary/10 text-primary px-2 py-0.5 rounded">VLAN {ssid.vlan}</span>}
+              {ssid.band && <span className="bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">{ssid.band}</span>}
+              {ssid.security && <span className="bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">{ssid.security}</span>}
+              <button onClick={() => toggleSSID(ssid.id)} className={`px-2 py-0.5 rounded text-[10px] ${ssid.enabled ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
+                {ssid.enabled ? "Aktiv" : "Deaktivert"}
+              </button>
+              <button onClick={() => removeSSID(ssid.id)} className="ml-auto text-muted-foreground hover:text-destructive"><Trash2 className="h-3 w-3" /></button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {ssids.length === 0 && !showForm && (
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <Wifi className="h-10 w-10 text-muted-foreground/40 mb-3" />
+          <p className="text-sm text-muted-foreground mb-1">Ingen SSID-er konfigurert</p>
+          <p className="text-xs text-muted-foreground/70 mb-4">Legg til trådløse nettverk dette aksesspunktet sender ut.</p>
+          <Button size="sm" onClick={() => setShowForm(true)}><Plus className="h-3 w-3 mr-1" /> Legg til SSID</Button>
+        </div>
+      )}
+
+      {showForm ? (
+        <div className="bg-background border border-border rounded-md p-3 space-y-3">
+          <div className="grid grid-cols-3 gap-3">
+            <div><label className="text-[10px] text-muted-foreground block mb-0.5">SSID-navn *</label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="GjestNett" className="bg-secondary border-border h-9 text-xs" /></div>
+            <div>
+              <label className="text-[10px] text-muted-foreground block mb-0.5">VLAN</label>
+              {availableVlans.length > 0 ? (
+                <select value={form.vlan} onChange={e => setForm({ ...form, vlan: e.target.value })} className={selectClass}>
+                  <option value="">Ingen</option>
+                  {availableVlans.map(v => <option key={v.vlan} value={v.vlan}>VLAN {v.vlan} – {v.name}</option>)}
+                </select>
+              ) : (
+                <Input value={form.vlan} onChange={e => setForm({ ...form, vlan: e.target.value })} placeholder="VLAN ID" className="bg-secondary border-border h-9 text-xs" />
+              )}
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground block mb-0.5">Bånd</label>
+              <select value={form.band} onChange={e => setForm({ ...form, band: e.target.value as any })} className={selectClass}>
+                {ssidBandOptions.map(b => <option key={b} value={b}>{b}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground block mb-0.5">Sikkerhet</label>
+              <select value={form.security} onChange={e => setForm({ ...form, security: e.target.value })} className={selectClass}>
+                {ssidSecurityOptions.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div className="flex items-end">
+              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer pb-2">
+                <input type="checkbox" checked={form.enabled} onChange={e => setForm({ ...form, enabled: e.target.checked })} className="rounded border-border" />
+                Aktiv
+              </label>
+            </div>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button variant="ghost" size="sm" onClick={() => setShowForm(false)}>Avbryt</Button>
+            <Button size="sm" onClick={addSSID} disabled={!form.name}><Save className="h-3 w-3 mr-1" /> Lagre</Button>
+          </div>
+        </div>
+      ) : ssids.length > 0 && (
+        <button onClick={() => setShowForm(true)} className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 mt-2"><Plus className="h-3 w-3" /> Legg til SSID</button>
+      )}
+    </div>
+  );
+}
+
 function DeviceDetail({ device, onBack, onEdit, onDelete, onUpdate }: {
   device: Device; onBack: () => void; onEdit: (d: Device) => void; onDelete: (id: string) => void; onUpdate: () => void;
 }) {
