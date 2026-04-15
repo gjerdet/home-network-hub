@@ -150,7 +150,7 @@ export interface NetworkInfo {
   name: string;
   subnet: string;
   vlan?: string;
-  zone?: NetworkZone;
+  zone?: string; // zone name
   gateway?: string;
   dhcpRange?: string;
   dns1?: string;
