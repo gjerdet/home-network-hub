@@ -279,6 +279,7 @@ export default function FirewallPage() {
                   <td className="px-3 py-3 text-muted-foreground font-mono text-xs">{r.destination}</td>
                   <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
                     <div className="flex gap-1">
+                      <button onClick={() => handleEdit(r)} className="p-1 text-muted-foreground hover:text-primary"><Edit2 className="h-3 w-3" /></button>
                       <button onClick={() => moveRule(r.id, -1)} className="p-1 text-muted-foreground hover:text-foreground"><ArrowUp className="h-3 w-3" /></button>
                       <button onClick={() => moveRule(r.id, 1)} className="p-1 text-muted-foreground hover:text-foreground"><ArrowDown className="h-3 w-3" /></button>
                       <button onClick={() => toggleEnabled(r.id)} className="p-1 text-muted-foreground hover:text-foreground">{r.enabled ? <Shield className="h-3 w-3" /> : <ShieldOff className="h-3 w-3" />}</button>
