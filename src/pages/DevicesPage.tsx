@@ -234,7 +234,7 @@ export default function DevicesPage() {
   const [statusFilter, setStatusFilter] = useState<Device["status"] | "all">("all");
   const [tagsInput, setTagsInput] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
-
+  const [viewMode, setViewMode] = useState<"list" | "topology">("list");
   useEffect(() => { setDevices(getDevices()); }, []);
 
   const refreshDevices = () => {
