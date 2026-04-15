@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { getDevices, addDevice, deleteDevice, updateDevice, saveDevices, getFirewalls, type Device, type DeviceType, type Firewall } from "@/lib/store";
+import { getDevices, addDevice, deleteDevice, updateDevice, saveDevices, getFirewalls, getNetworks, type Device, type DeviceType, type DeviceSSID, type Firewall } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Edit2, Monitor, Wifi, Server, HardDrive, Shield, Radio, X, Save, Box, Cpu, Zap, Battery, ChevronDown, ChevronRight, ArrowLeft, ExternalLink, Copy, Network, Route, Cable, Share2, List, LayoutGrid } from "lucide-react";
+import { Plus, Trash2, Edit2, Monitor, Wifi, Server, HardDrive, Shield, Radio, X, Save, Box, Cpu, Zap, Battery, ChevronDown, ChevronRight, ArrowLeft, ExternalLink, Copy, Network, Route, Cable, Share2, List, LayoutGrid, Camera } from "lucide-react";
 import { DeviceSubData } from "@/components/DeviceSubData";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { NetworkTopology } from "@/components/NetworkTopology";
@@ -11,14 +11,14 @@ import { SubNav } from "@/components/SubNav";
 
 const typeIcons: Record<DeviceType, React.ReactNode> = {
   router: <Wifi className="h-4 w-4" />, switch: <Monitor className="h-4 w-4" />, server: <Server className="h-4 w-4" />,
-  ap: <Radio className="h-4 w-4" />, nas: <HardDrive className="h-4 w-4" />, firewall: <Shield className="h-4 w-4" />,
+  ap: <Radio className="h-4 w-4" />, camera: <Camera className="h-4 w-4" />, nas: <HardDrive className="h-4 w-4" />, firewall: <Shield className="h-4 w-4" />,
   vm: <Box className="h-4 w-4" />, container: <Cpu className="h-4 w-4" />, pdu: <Zap className="h-4 w-4" />,
   ups: <Battery className="h-4 w-4" />, other: <Monitor className="h-4 w-4" />,
 };
 
 const typeColors: Record<DeviceType, string> = {
   router: "bg-primary/20 text-primary", switch: "bg-info/20 text-info", server: "bg-warning/20 text-warning",
-  ap: "bg-success/20 text-success", nas: "bg-accent text-accent-foreground", firewall: "bg-destructive/20 text-destructive",
+  ap: "bg-success/20 text-success", camera: "bg-purple-500/20 text-purple-400", nas: "bg-accent text-accent-foreground", firewall: "bg-destructive/20 text-destructive",
   vm: "bg-info/15 text-info", container: "bg-primary/15 text-primary", pdu: "bg-warning/15 text-warning",
   ups: "bg-success/15 text-success", other: "bg-muted text-muted-foreground",
 };
@@ -32,7 +32,7 @@ const statusBadge: Record<Device["status"], { bg: string; dot: string; label: st
 };
 
 const typeLabels: Record<DeviceType, string> = {
-  router: "Ruter", switch: "Switch", server: "Server", ap: "Aksesspunkt", nas: "NAS",
+  router: "Ruter", switch: "Switch", server: "Server", ap: "Aksesspunkt", camera: "Kamera", nas: "NAS",
   firewall: "Brannmur", vm: "Virtuell maskin", container: "Container", pdu: "PDU", ups: "UPS", other: "Annet"
 };
 
@@ -42,7 +42,7 @@ const emptyDevice = {
   name: "", ip: "", mac: "", type: "router" as DeviceType, role: "", status: "online" as Device["status"],
   location: "", manufacturer: "", model: "", serialNumber: "", os: "", osVersion: "", firmware: "",
   cpuCores: undefined as number | undefined, ramGb: undefined as number | undefined, storageGb: undefined as number | undefined,
-  primaryInterface: "", managementIp: "", site: "", rack: "", rackPosition: "", tenant: "",
+  primaryInterface: "", managementIp: "", managementVlan: "", site: "", rack: "", rackPosition: "", tenant: "",
   assetTag: "", purchaseDate: "", warrantyEnd: "", notes: "", tags: [] as string[], firewallId: "",
 };
 
@@ -72,13 +72,120 @@ function Panel({ title, children, defaultOpen = true }: { title: string; childre
 }
 
 // ═══════════════════════════════════════════
-// Device Detail View (NetBox-style)
+// SSID Manager for AP devices
 // ═══════════════════════════════════════════
+const ssidSecurityOptions = ["WPA2-Personal", "WPA2-Enterprise", "WPA3-Personal", "WPA3-Enterprise", "Open", "WEP"];
+const ssidBandOptions: DeviceSSID["band"][] = ["2.4GHz", "5GHz", "6GHz", "dual", "tri"];
+
+function SSIDManager({ device, onUpdate, networks }: { device: Device; onUpdate: () => void; networks: { vlan?: string; name: string }[] }) {
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ name: "", vlan: "", band: "dual" as DeviceSSID["band"], security: "WPA2-Personal", enabled: true });
+  const ssids = device.ssids || [];
+  const availableVlans = networks.filter(n => n.vlan).map(n => ({ vlan: n.vlan!, name: n.name }));
+  const selectClass = "w-full h-9 rounded-md bg-secondary border border-border px-3 text-sm text-foreground";
+
+  const addSSID = () => {
+    if (!form.name) return;
+    const newSSID: DeviceSSID = { id: crypto.randomUUID(), ...form };
+    updateDevice(device.id, { ssids: [...ssids, newSSID] });
+    onUpdate();
+    setShowForm(false);
+    setForm({ name: "", vlan: "", band: "dual", security: "WPA2-Personal", enabled: true });
+  };
+
+  const removeSSID = (id: string) => {
+    updateDevice(device.id, { ssids: ssids.filter(s => s.id !== id) });
+    onUpdate();
+  };
+
+  const toggleSSID = (id: string) => {
+    updateDevice(device.id, { ssids: ssids.map(s => s.id === id ? { ...s, enabled: !s.enabled } : s) });
+    onUpdate();
+  };
+
+  return (
+    <div className="border-t border-border p-4">
+      {ssids.length > 0 && (
+        <div className="space-y-2 mb-3">
+          {ssids.map(ssid => (
+            <div key={ssid.id} className="flex items-center gap-3 bg-background rounded-md border border-border p-3 text-xs">
+              <Wifi className="h-3.5 w-3.5 text-primary" />
+              <span className="font-medium text-foreground">{ssid.name}</span>
+              {ssid.vlan && <span className="bg-primary/10 text-primary px-2 py-0.5 rounded">VLAN {ssid.vlan}</span>}
+              {ssid.band && <span className="bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">{ssid.band}</span>}
+              {ssid.security && <span className="bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">{ssid.security}</span>}
+              <button onClick={() => toggleSSID(ssid.id)} className={`px-2 py-0.5 rounded text-[10px] ${ssid.enabled ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
+                {ssid.enabled ? "Aktiv" : "Deaktivert"}
+              </button>
+              <button onClick={() => removeSSID(ssid.id)} className="ml-auto text-muted-foreground hover:text-destructive"><Trash2 className="h-3 w-3" /></button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {ssids.length === 0 && !showForm && (
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <Wifi className="h-10 w-10 text-muted-foreground/40 mb-3" />
+          <p className="text-sm text-muted-foreground mb-1">Ingen SSID-er konfigurert</p>
+          <p className="text-xs text-muted-foreground/70 mb-4">Legg til trådløse nettverk dette aksesspunktet sender ut.</p>
+          <Button size="sm" onClick={() => setShowForm(true)}><Plus className="h-3 w-3 mr-1" /> Legg til SSID</Button>
+        </div>
+      )}
+
+      {showForm ? (
+        <div className="bg-background border border-border rounded-md p-3 space-y-3">
+          <div className="grid grid-cols-3 gap-3">
+            <div><label className="text-[10px] text-muted-foreground block mb-0.5">SSID-navn *</label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="GjestNett" className="bg-secondary border-border h-9 text-xs" /></div>
+            <div>
+              <label className="text-[10px] text-muted-foreground block mb-0.5">VLAN</label>
+              {availableVlans.length > 0 ? (
+                <select value={form.vlan} onChange={e => setForm({ ...form, vlan: e.target.value })} className={selectClass}>
+                  <option value="">Ingen</option>
+                  {availableVlans.map(v => <option key={v.vlan} value={v.vlan}>VLAN {v.vlan} – {v.name}</option>)}
+                </select>
+              ) : (
+                <Input value={form.vlan} onChange={e => setForm({ ...form, vlan: e.target.value })} placeholder="VLAN ID" className="bg-secondary border-border h-9 text-xs" />
+              )}
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground block mb-0.5">Bånd</label>
+              <select value={form.band} onChange={e => setForm({ ...form, band: e.target.value as any })} className={selectClass}>
+                {ssidBandOptions.map(b => <option key={b} value={b}>{b}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground block mb-0.5">Sikkerhet</label>
+              <select value={form.security} onChange={e => setForm({ ...form, security: e.target.value })} className={selectClass}>
+                {ssidSecurityOptions.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div className="flex items-end">
+              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer pb-2">
+                <input type="checkbox" checked={form.enabled} onChange={e => setForm({ ...form, enabled: e.target.checked })} className="rounded border-border" />
+                Aktiv
+              </label>
+            </div>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button variant="ghost" size="sm" onClick={() => setShowForm(false)}>Avbryt</Button>
+            <Button size="sm" onClick={addSSID} disabled={!form.name}><Save className="h-3 w-3 mr-1" /> Lagre</Button>
+          </div>
+        </div>
+      ) : ssids.length > 0 && (
+        <button onClick={() => setShowForm(true)} className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 mt-2"><Plus className="h-3 w-3" /> Legg til SSID</button>
+      )}
+    </div>
+  );
+}
+
 function DeviceDetail({ device, onBack, onEdit, onDelete, onUpdate }: {
   device: Device; onBack: () => void; onEdit: (d: Device) => void; onDelete: (id: string) => void; onUpdate: () => void;
 }) {
-  const [detailTab, setDetailTab] = useState<"info" | "interfaces" | "routes" | "cables">("info");
+  const [detailTab, setDetailTab] = useState<"info" | "interfaces" | "routes" | "cables" | "ssids">("info");
   const s = statusBadge[device.status];
+  const networks = getNetworks();
+  const showMgmtVlan = !["router", "firewall"].includes(device.type);
+  const isAP = device.type === "ap";
 
   return (
     <div>
@@ -126,6 +233,7 @@ function DeviceDetail({ device, onBack, onEdit, onDelete, onUpdate }: {
           { key: "interfaces" as const, label: "Grensesnitt", icon: Network, count: (device.interfaces || []).length },
           { key: "routes" as const, label: "Ruter", icon: Route, count: (device.routes || []).length },
           { key: "cables" as const, label: "Kabler", icon: Cable, count: (device.cables || []).length },
+          ...(isAP ? [{ key: "ssids" as const, label: "SSID-er", icon: Wifi, count: (device.ssids || []).length }] : []),
         ].map(t => (
           <button
             key={t.key}
@@ -196,8 +304,29 @@ function DeviceDetail({ device, onBack, onEdit, onDelete, onUpdate }: {
               <InfoRow label="Primær IP" value={device.ip} mono />
               <InfoRow label="MAC-adresse" value={device.mac} mono />
               <InfoRow label="Management IP" value={device.managementIp} mono />
+              {showMgmtVlan && <InfoRow label="Management VLAN" value={device.managementVlan ? `VLAN ${device.managementVlan}` : undefined} />}
               <InfoRow label="Primært grensesnitt" value={device.primaryInterface} mono />
             </Panel>
+
+            {isAP && (device.ssids || []).length > 0 && (
+              <Panel title="SSID-er">
+                {device.ssids!.map(ssid => (
+                  <div key={ssid.id} className="flex border-b border-border last:border-0">
+                    <span className="w-40 shrink-0 px-3 py-2 text-xs text-muted-foreground bg-secondary/50 font-medium flex items-center gap-1.5">
+                      <Wifi className="h-3 w-3" /> {ssid.name}
+                    </span>
+                    <div className="flex-1 px-3 py-2 flex gap-3 text-xs">
+                      {ssid.vlan && <span className="bg-primary/10 text-primary px-2 py-0.5 rounded">VLAN {ssid.vlan}</span>}
+                      {ssid.band && <span className="bg-secondary px-2 py-0.5 rounded text-muted-foreground">{ssid.band}</span>}
+                      {ssid.security && <span className="bg-secondary px-2 py-0.5 rounded text-muted-foreground">{ssid.security}</span>}
+                      <span className={`px-2 py-0.5 rounded ${ssid.enabled ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
+                        {ssid.enabled ? "Aktiv" : "Deaktivert"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </Panel>
+            )}
 
             <Panel title="Programvare">
               <InfoRow label="Operativsystem" value={device.os} />
@@ -225,8 +354,12 @@ function DeviceDetail({ device, onBack, onEdit, onDelete, onUpdate }: {
         </div>
       )}
 
-      {detailTab !== "info" && (
-        <DeviceSubData device={device} onUpdate={onUpdate} initialTab={detailTab} />
+      {detailTab === "ssids" && isAP && (
+        <SSIDManager device={device} onUpdate={onUpdate} networks={networks} />
+      )}
+
+      {detailTab !== "info" && detailTab !== "ssids" && (
+        <DeviceSubData device={device} onUpdate={onUpdate} initialTab={detailTab as "interfaces" | "routes" | "cables"} />
       )}
     </div>
   );
@@ -292,6 +425,7 @@ export default function DevicesPage() {
       serialNumber: d.serialNumber || "", os: d.os || "", osVersion: d.osVersion || "",
       firmware: d.firmware || "", cpuCores: d.cpuCores, ramGb: d.ramGb, storageGb: d.storageGb,
       primaryInterface: d.primaryInterface || "", managementIp: d.managementIp || "",
+      managementVlan: d.managementVlan || "",
       site: d.site || "", rack: d.rack || "", rackPosition: d.rackPosition || "",
       tenant: d.tenant || "", assetTag: d.assetTag || "", purchaseDate: d.purchaseDate || "",
       warrantyEnd: d.warrantyEnd || "", notes: d.notes || "", tags: d.tags || [], firewallId: d.firewallId || "",
@@ -404,10 +538,19 @@ export default function DevicesPage() {
                 <option value="">Ingen</option>
                 {firewalls.map(fw => <option key={fw.id} value={fw.id}>{fw.name}{fw.ip ? ` (${fw.ip})` : ""}</option>)}
               </select>
-            </div>
+           </div>
           </div>
 
-
+          {!["router", "firewall"].includes(form.type) && (
+            <>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-3 mt-6">Management VLAN</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div><label className="text-xs text-muted-foreground mb-1 block">Management VLAN</label>
+                  <Input value={(form as any).managementVlan || ""} onChange={e => setForm({ ...form, managementVlan: e.target.value } as any)} placeholder="f.eks. 100" className="bg-secondary border-border" />
+                </div>
+              </div>
+            </>
+          )}
           <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-3 mt-6">Programvare</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div><label className="text-xs text-muted-foreground mb-1 block">Operativsystem</label>

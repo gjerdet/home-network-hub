@@ -24,14 +24,14 @@ interface TopologyLink {
 
 const typeColors: Record<DeviceType, string> = {
   router: "#3b82f6", switch: "#06b6d4", server: "#f59e0b",
-  ap: "#22c55e", nas: "#8b5cf6", firewall: "#ef4444",
+  ap: "#22c55e", camera: "#a855f7", nas: "#8b5cf6", firewall: "#ef4444",
   vm: "#6366f1", container: "#14b8a6", pdu: "#eab308",
   ups: "#84cc16", other: "#6b7280",
 };
 
 const typeIcons: Record<DeviceType, string> = {
   router: "R", switch: "SW", server: "SRV",
-  ap: "AP", nas: "NAS", firewall: "FW",
+  ap: "AP", camera: "CAM", nas: "NAS", firewall: "FW",
   vm: "VM", container: "CT", pdu: "PDU",
   ups: "UPS", other: "?",
 };

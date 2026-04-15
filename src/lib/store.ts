@@ -40,6 +40,15 @@ export interface DeviceCable {
   status: "connected" | "planned" | "broken";
 }
 
+export interface DeviceSSID {
+  id: string;
+  name: string; // SSID name
+  vlan?: string; // VLAN this SSID maps to
+  band?: "2.4GHz" | "5GHz" | "6GHz" | "dual" | "tri";
+  security?: string; // WPA2, WPA3, Open, etc
+  enabled: boolean;
+}
+
 export interface Device {
   id: string;
   name: string;
@@ -60,10 +69,11 @@ export interface Device {
   storageGb?: number;
   primaryInterface?: string;
   managementIp?: string;
+  managementVlan?: string; // management VLAN (for all except router/firewall)
   site?: string;
   rack?: string;
-  rackPosition?: string; // starting U position e.g. "12"
-  rackHeight?: number; // how many U this device occupies, default 1
+  rackPosition?: string;
+  rackHeight?: number;
   tenant?: string;
   assetTag?: string;
   purchaseDate?: string;
@@ -71,7 +81,8 @@ export interface Device {
   notes?: string;
   image?: string;
   tags?: string[];
-  firewallId?: string; // linked firewall
+  firewallId?: string;
+  ssids?: DeviceSSID[]; // AP-specific: SSIDs broadcast
   interfaces?: DeviceInterface[];
   routes?: DeviceRoute[];
   cables?: DeviceCable[];
@@ -79,7 +90,7 @@ export interface Device {
   updatedAt: string;
 }
 
-export type DeviceType = "router" | "switch" | "server" | "ap" | "nas" | "firewall" | "vm" | "container" | "pdu" | "ups" | "other";
+export type DeviceType = "router" | "switch" | "server" | "ap" | "camera" | "nas" | "firewall" | "vm" | "container" | "pdu" | "ups" | "other";
 
 export interface DocPage {
   id: string;
