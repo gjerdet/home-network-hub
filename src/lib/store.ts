@@ -308,7 +308,21 @@ export const updateNetwork = (id: string, updates: Partial<NetworkInfo>) => {
   saveNetworks(getNetworks().map(n => n.id === id ? { ...n, ...updates } : n));
 };
 
-// Files
+// Zones
+export const getZones = (): NetworkZone[] => getItem(KEYS.zones, []);
+export const saveZones = (z: NetworkZone[]) => setItem(KEYS.zones, z);
+export const addZone = (name: string) => {
+  const zones = getZones();
+  const zone: NetworkZone = { id: crypto.randomUUID(), name };
+  zones.push(zone);
+  saveZones(zones);
+  return zone;
+};
+export const deleteZone = (id: string) => {
+  saveZones(getZones().filter(z => z.id !== id));
+};
+
+
 export const getFiles = (): UploadedFile[] => getItem(KEYS.files, []);
 export const saveFiles = (f: UploadedFile[]) => setItem(KEYS.files, f);
 export const addFile = (f: Omit<UploadedFile, "id" | "createdAt">) => {
