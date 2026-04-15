@@ -22,7 +22,8 @@ interface Props {
 export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: Props) {
   const [tab, setTab] = useState<"interfaces" | "routes" | "cables">(initialTab);
   const allDevices = getDevices().filter(d => d.id !== device.id);
-
+  const networks = getNetworks();
+  const availableVlans = networks.filter(n => n.vlan).map(n => ({ vlan: n.vlan!, name: n.name }));
   // Interfaces
   const [showIfForm, setShowIfForm] = useState(false);
   const [showBulkForm, setShowBulkForm] = useState(false);
