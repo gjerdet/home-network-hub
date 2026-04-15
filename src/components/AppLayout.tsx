@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Monitor, FileText, Flame, Globe, FolderOpen, Users, LogOut, Search, ChevronDown, Server, Network, Cable, MapPin, Building2, Shield, LayoutGrid, Tag, Download, Upload, LayoutDashboard, AppWindow } from "lucide-react";
+import { Monitor, FileText, Flame, Globe, FolderOpen, Users, LogOut, Search, ChevronDown, Network, Download, Upload, LayoutDashboard, AppWindow, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate, useLocation } from "react-router-dom";
 import { logout, getCurrentUser } from "@/lib/store";
@@ -56,6 +56,12 @@ const makeNavGroups = (onExport: () => void, onImport: () => void): NavGroup[] =
     label: "Brannmur",
     items: [
       { title: "Regler", url: "/firewall", icon: Flame },
+    ],
+  },
+  {
+    label: "Innstillingar",
+    items: [
+      { title: "Innstillingar", url: "/settings", icon: Settings },
     ],
   },
   {
