@@ -23,7 +23,7 @@ import {
 } from "@/lib/store";
 import type { ServiceLink } from "@/pages/ServicesPage";
 
-const ResponsiveGridLayout = WidthProvider(Responsive);
+
 
 const LAYOUT_KEY = "netdocs_dashboard_layout";
 const HIDDEN_KEY = "netdocs_dashboard_hidden";
