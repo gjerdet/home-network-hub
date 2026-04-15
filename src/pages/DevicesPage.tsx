@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { getDevices, addDevice, deleteDevice, updateDevice, saveDevices, getFirewalls, type Device, type DeviceType, type Firewall } from "@/lib/store";
+import { getDevices, addDevice, deleteDevice, updateDevice, saveDevices, getFirewalls, getNetworks, type Device, type DeviceType, type DeviceSSID, type Firewall } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Edit2, Monitor, Wifi, Server, HardDrive, Shield, Radio, X, Save, Box, Cpu, Zap, Battery, ChevronDown, ChevronRight, ArrowLeft, ExternalLink, Copy, Network, Route, Cable, Share2, List, LayoutGrid } from "lucide-react";
+import { Plus, Trash2, Edit2, Monitor, Wifi, Server, HardDrive, Shield, Radio, X, Save, Box, Cpu, Zap, Battery, ChevronDown, ChevronRight, ArrowLeft, ExternalLink, Copy, Network, Route, Cable, Share2, List, LayoutGrid, Camera } from "lucide-react";
 import { DeviceSubData } from "@/components/DeviceSubData";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { NetworkTopology } from "@/components/NetworkTopology";
@@ -11,14 +11,14 @@ import { SubNav } from "@/components/SubNav";
 
 const typeIcons: Record<DeviceType, React.ReactNode> = {
   router: <Wifi className="h-4 w-4" />, switch: <Monitor className="h-4 w-4" />, server: <Server className="h-4 w-4" />,
-  ap: <Radio className="h-4 w-4" />, nas: <HardDrive className="h-4 w-4" />, firewall: <Shield className="h-4 w-4" />,
+  ap: <Radio className="h-4 w-4" />, camera: <Camera className="h-4 w-4" />, nas: <HardDrive className="h-4 w-4" />, firewall: <Shield className="h-4 w-4" />,
   vm: <Box className="h-4 w-4" />, container: <Cpu className="h-4 w-4" />, pdu: <Zap className="h-4 w-4" />,
   ups: <Battery className="h-4 w-4" />, other: <Monitor className="h-4 w-4" />,
 };
 
 const typeColors: Record<DeviceType, string> = {
   router: "bg-primary/20 text-primary", switch: "bg-info/20 text-info", server: "bg-warning/20 text-warning",
-  ap: "bg-success/20 text-success", nas: "bg-accent text-accent-foreground", firewall: "bg-destructive/20 text-destructive",
+  ap: "bg-success/20 text-success", camera: "bg-purple-500/20 text-purple-400", nas: "bg-accent text-accent-foreground", firewall: "bg-destructive/20 text-destructive",
   vm: "bg-info/15 text-info", container: "bg-primary/15 text-primary", pdu: "bg-warning/15 text-warning",
   ups: "bg-success/15 text-success", other: "bg-muted text-muted-foreground",
 };
@@ -32,7 +32,7 @@ const statusBadge: Record<Device["status"], { bg: string; dot: string; label: st
 };
 
 const typeLabels: Record<DeviceType, string> = {
-  router: "Ruter", switch: "Switch", server: "Server", ap: "Aksesspunkt", nas: "NAS",
+  router: "Ruter", switch: "Switch", server: "Server", ap: "Aksesspunkt", camera: "Kamera", nas: "NAS",
   firewall: "Brannmur", vm: "Virtuell maskin", container: "Container", pdu: "PDU", ups: "UPS", other: "Annet"
 };
 
