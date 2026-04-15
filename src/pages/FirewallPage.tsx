@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
   getFirewalls, addFirewall, deleteFirewall, updateFirewall, type Firewall,
   getFirewallRules, addFirewallRule, deleteFirewallRule, saveFirewallRules, updateFirewallRule,
-  getNetworks, type FirewallRule,
+  getNetworks, getDevices, type FirewallRule, type Device,
 } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
