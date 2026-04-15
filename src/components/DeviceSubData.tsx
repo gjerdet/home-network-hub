@@ -346,7 +346,24 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                   <div><label className="text-[10px] text-muted-foreground block mb-0.5">IP</label><Input value={ifForm.ip} onChange={e => setIfForm({ ...ifForm, ip: e.target.value })} className="bg-secondary border-border h-9 text-xs" /></div>
                   <div><label className="text-[10px] text-muted-foreground block mb-0.5">MAC</label><Input value={ifForm.mac} onChange={e => setIfForm({ ...ifForm, mac: e.target.value })} className="bg-secondary border-border h-9 text-xs" /></div>
                   <div><label className="text-[10px] text-muted-foreground block mb-0.5">Hastighet</label><Input value={ifForm.speed} onChange={e => setIfForm({ ...ifForm, speed: e.target.value })} placeholder="1G" className="bg-secondary border-border h-9 text-xs" /></div>
-                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">VLAN ID</label><Input value={ifForm.vlanId} onChange={e => setIfForm({ ...ifForm, vlanId: e.target.value })} className="bg-secondary border-border h-9 text-xs" /></div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-0.5">Modus</label>
+                    <select value={(ifForm as any).mode || ""} onChange={e => setIfForm({ ...ifForm, mode: e.target.value as any } as any)} className={selectClass}>
+                      <option value="">Ingen</option>
+                      {ifaceModes.map(m => <option key={m} value={m}>{ifaceModeLabels[m]}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-0.5">Access VLAN</label>
+                    {availableVlans.length > 0 ? (
+                      <select value={ifForm.vlanId} onChange={e => setIfForm({ ...ifForm, vlanId: e.target.value })} className={selectClass}>
+                        <option value="">Ingen</option>
+                        {availableVlans.map(v => <option key={v.vlan} value={v.vlan}>VLAN {v.vlan} – {v.name}</option>)}
+                      </select>
+                    ) : (
+                      <Input value={ifForm.vlanId} onChange={e => setIfForm({ ...ifForm, vlanId: e.target.value })} placeholder="VLAN ID" className="bg-secondary border-border h-9 text-xs" />
+                    )}
+                  </div>
                 </div>
                 {/* Connected device + interface */}
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold">Tilkobling</p>
