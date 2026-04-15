@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { type Device, type DeviceInterface, type DeviceRoute, type DeviceCable, updateDevice, getDevices } from "@/lib/store";
+import { type Device, type DeviceInterface, type DeviceRoute, type DeviceCable, updateDevice, getDevices, getNetworks } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Save, X, Network, Route, Cable, Layers, Edit2, ChevronDown, ChevronRight } from "lucide-react";
