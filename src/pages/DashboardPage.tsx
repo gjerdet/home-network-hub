@@ -162,7 +162,7 @@ export default function DashboardPage() {
     catch { return null; }
   };
 
-  const onLayoutChange = useCallback((_: LayoutItem[], allLayouts: Record<string, LayoutItem[]>) => {
+  const onLayoutChange = useCallback((_current: LayoutItem[], allLayouts: Record<string, LayoutItem[]>) => {
     setLayouts(allLayouts);
     localStorage.setItem(LAYOUT_KEY, JSON.stringify(allLayouts));
   }, []);
