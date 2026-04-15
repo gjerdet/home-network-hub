@@ -1,8 +1,12 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Responsive, WidthProvider, type LayoutItem } from "react-grid-layout";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+import RGL from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
+import type { LayoutItem } from "react-grid-layout";
+
+const ResponsiveGridLayout = (RGL as any).WidthProvider((RGL as any).Responsive);
 import {
   Monitor, Globe, Flame, FileText, Server, Shield, Wifi,
   HardDrive, Activity, AlertTriangle, CheckCircle2, Clock,
@@ -19,7 +23,7 @@ import {
 } from "@/lib/store";
 import type { ServiceLink } from "@/pages/ServicesPage";
 
-const ResponsiveGridLayout = WidthProvider(Responsive);
+
 
 const LAYOUT_KEY = "netdocs_dashboard_layout";
 const HIDDEN_KEY = "netdocs_dashboard_hidden";
