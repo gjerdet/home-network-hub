@@ -68,7 +68,12 @@ export default function NetworksPage() {
             <div><label className="text-xs text-muted-foreground mb-1 block">Gateway</label><Input value={form.gateway} onChange={e => setForm({ ...form, gateway: e.target.value })} className="bg-secondary border-border" placeholder="192.168.1.1" /></div>
             <div><label className="text-xs text-muted-foreground mb-1 block">DHCP-område</label><Input value={form.dhcpRange} onChange={e => setForm({ ...form, dhcpRange: e.target.value })} className="bg-secondary border-border" placeholder="192.168.1.100-200" /></div>
             <div><label className="text-xs text-muted-foreground mb-1 block">Domene</label><Input value={form.domain} onChange={e => setForm({ ...form, domain: e.target.value })} className="bg-secondary border-border" placeholder="local.lan" /></div>
-          </div>
+            <div><label className="text-xs text-muted-foreground mb-1 block">Brannmur</label>
+              <select value={form.firewallId} onChange={e => setForm({ ...form, firewallId: e.target.value })} className={selectClass}>
+                <option value="">Ingen</option>
+                {firewalls.map(fw => <option key={fw.id} value={fw.id}>{fw.name}{fw.ip ? ` (${fw.ip})` : ""}</option>)}
+              </select>
+            </div>
 
           {/* WAN - prominent section */}
           <div className="bg-secondary/50 border border-border rounded-lg p-4 mb-5">
