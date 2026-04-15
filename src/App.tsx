@@ -16,6 +16,7 @@ import SearchPage from "./pages/SearchPage";
 import IPAMPage from "./pages/IPAMPage";
 import DashboardPage from "./pages/DashboardPage";
 import ServicesPage from "./pages/ServicesPage";
+import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const App = () => (
           <Route path="/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
           <Route path="/search" element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
           <Route path="/services" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
