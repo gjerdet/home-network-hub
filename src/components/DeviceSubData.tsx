@@ -696,7 +696,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                     <label className="text-[10px] text-muted-foreground block mb-0.5">Til enhet *</label>
                     <select value={cableForm.remoteDevice} onChange={e => setCableForm({ ...cableForm, remoteDevice: e.target.value, remotePort: "" })} className={selectClass}>
                       <option value="">Velg enhet...</option>
-                      {allDevices.map(d => <option key={d.id} value={d.id}>{d.name} ({d.ip})</option>)}
+                      {allDevices.filter(d => d.type !== "camera").map(d => <option key={d.id} value={d.id}>{d.name} ({d.ip})</option>)}
                     </select>
                   </div>
                   <div>
