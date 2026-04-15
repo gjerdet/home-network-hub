@@ -189,6 +189,7 @@ const KEYS = {
   devices: "netdocs_devices",
   docs: "netdocs_docs",
   firewallRules: "netdocs_firewall",
+  firewalls: "netdocs_firewalls",
   networks: "netdocs_networks",
   files: "netdocs_files",
   users: "netdocs_users",
