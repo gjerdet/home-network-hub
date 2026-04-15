@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getDevices, addDevice, deleteDevice, updateDevice, saveDevices, type Device, type DeviceType } from "@/lib/store";
+import { getDevices, addDevice, deleteDevice, updateDevice, saveDevices, getFirewalls, type Device, type DeviceType, type Firewall } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Edit2, Monitor, Wifi, Server, HardDrive, Shield, Radio, X, Save, Box, Cpu, Zap, Battery, ChevronDown, ChevronRight, ArrowLeft, ExternalLink, Copy, Network, Route, Cable, Share2, List, LayoutGrid } from "lucide-react";
@@ -42,7 +42,7 @@ const emptyDevice = {
   location: "", manufacturer: "", model: "", serialNumber: "", os: "", osVersion: "", firmware: "",
   cpuCores: undefined as number | undefined, ramGb: undefined as number | undefined, storageGb: undefined as number | undefined,
   primaryInterface: "", managementIp: "", site: "", rack: "", rackPosition: "", tenant: "",
-  assetTag: "", purchaseDate: "", warrantyEnd: "", notes: "", tags: [] as string[],
+  assetTag: "", purchaseDate: "", warrantyEnd: "", notes: "", tags: [] as string[], firewallId: "",
 };
 
 // ── NetBox-style info row ──
@@ -153,6 +153,9 @@ function DeviceDetail({ device, onBack, onEdit, onDelete, onUpdate }: {
                   </div>
                 </div>
               )}
+              {device.firewallId && (() => { const fws = getFirewalls(); const fw = fws.find(f => f.id === device.firewallId); return fw ? (
+                <InfoRow label="Brannmur" value={fw.name} />
+              ) : null; })()}
             </Panel>
 
             <Panel title="Plassering">
@@ -228,6 +231,7 @@ function DeviceDetail({ device, onBack, onEdit, onDelete, onUpdate }: {
 // ═══════════════════════════════════════════
 export default function DevicesPage() {
   const [devices, setDevices] = useState<Device[]>([]);
+  const [firewalls, setFirewalls] = useState<Firewall[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
@@ -238,7 +242,7 @@ export default function DevicesPage() {
   const [tagsInput, setTagsInput] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "topology" | "rack">("list");
-  useEffect(() => { setDevices(getDevices()); }, []);
+  useEffect(() => { setDevices(getDevices()); setFirewalls(getFirewalls()); }, []);
 
   const refreshDevices = () => {
     const updated = getDevices();
@@ -284,7 +288,7 @@ export default function DevicesPage() {
       primaryInterface: d.primaryInterface || "", managementIp: d.managementIp || "",
       site: d.site || "", rack: d.rack || "", rackPosition: d.rackPosition || "",
       tenant: d.tenant || "", assetTag: d.assetTag || "", purchaseDate: d.purchaseDate || "",
-      warrantyEnd: d.warrantyEnd || "", notes: d.notes || "", tags: d.tags || [],
+      warrantyEnd: d.warrantyEnd || "", notes: d.notes || "", tags: d.tags || [], firewallId: d.firewallId || "",
     });
     setTagsInput((d.tags || []).join(", "));
     setEditId(d.id);
@@ -386,7 +390,18 @@ export default function DevicesPage() {
                 {Object.entries(statusBadge).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
               </select>
             </div>
+            </div>
+
+          <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-3 mt-6">Brannmur</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div><label className="text-xs text-muted-foreground mb-1 block">Tilknyttet brannmur</label>
+              <select value={form.firewallId} onChange={e => setForm({ ...form, firewallId: e.target.value })} className={selectClass}>
+                <option value="">Ingen</option>
+                {firewalls.map(fw => <option key={fw.id} value={fw.id}>{fw.name}{fw.ip ? ` (${fw.ip})` : ""}</option>)}
+              </select>
+            </div>
           </div>
+
 
           <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-3 mt-6">Programvare</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

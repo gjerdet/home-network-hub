@@ -1,18 +1,19 @@
 import { useState, useEffect } from "react";
-import { getNetworks, addNetwork, deleteNetwork, updateNetwork, type NetworkInfo } from "@/lib/store";
+import { getNetworks, addNetwork, deleteNetwork, updateNetwork, getFirewalls, type NetworkInfo, type Firewall } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, X, Save, Globe, Edit2, Wifi, Server } from "lucide-react";
+import { Plus, Trash2, X, Save, Globe, Edit2, Wifi, Server, Shield } from "lucide-react";
 
-const emptyForm = { name: "", subnet: "", vlan: "", gateway: "", dhcpRange: "", dns1: "", dns2: "", wanAddress: "", wanGateway: "", wanType: "dhcp" as NetworkInfo["wanType"], domain: "", description: "" };
+const emptyForm = { name: "", subnet: "", vlan: "", gateway: "", dhcpRange: "", dns1: "", dns2: "", wanAddress: "", wanGateway: "", wanType: "dhcp" as NetworkInfo["wanType"], domain: "", description: "", firewallId: "" };
 
 export default function NetworksPage() {
   const [networks, setNetworks] = useState<NetworkInfo[]>([]);
+  const [firewalls, setFirewalls] = useState<Firewall[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
 
-  useEffect(() => { setNetworks(getNetworks()); }, []);
+  useEffect(() => { setNetworks(getNetworks()); setFirewalls(getFirewalls()); }, []);
 
   const handleSave = () => {
     if (!form.name || !form.subnet) return;
@@ -33,6 +34,7 @@ export default function NetworksPage() {
       dhcpRange: n.dhcpRange || "", dns1: n.dns1 || "", dns2: n.dns2 || "",
       wanAddress: n.wanAddress || "", wanGateway: n.wanGateway || "",
       wanType: n.wanType || "dhcp", domain: n.domain || "", description: n.description || "",
+      firewallId: n.firewallId || "",
     });
     setEditId(n.id);
     setShowForm(true);
@@ -66,9 +68,15 @@ export default function NetworksPage() {
             <div><label className="text-xs text-muted-foreground mb-1 block">Gateway</label><Input value={form.gateway} onChange={e => setForm({ ...form, gateway: e.target.value })} className="bg-secondary border-border" placeholder="192.168.1.1" /></div>
             <div><label className="text-xs text-muted-foreground mb-1 block">DHCP-område</label><Input value={form.dhcpRange} onChange={e => setForm({ ...form, dhcpRange: e.target.value })} className="bg-secondary border-border" placeholder="192.168.1.100-200" /></div>
             <div><label className="text-xs text-muted-foreground mb-1 block">Domene</label><Input value={form.domain} onChange={e => setForm({ ...form, domain: e.target.value })} className="bg-secondary border-border" placeholder="local.lan" /></div>
+            <div><label className="text-xs text-muted-foreground mb-1 block">Brannmur</label>
+              <select value={form.firewallId} onChange={e => setForm({ ...form, firewallId: e.target.value })} className={selectClass}>
+                <option value="">Ingen</option>
+                {firewalls.map(fw => <option key={fw.id} value={fw.id}>{fw.name}{fw.ip ? ` (${fw.ip})` : ""}</option>)}
+              </select>
+            </div>
           </div>
 
-          {/* WAN - prominent section */}
+
           <div className="bg-secondary/50 border border-border rounded-lg p-4 mb-5">
             <div className="flex items-center gap-2 mb-3">
               <Wifi className="h-4 w-4 text-primary" />
@@ -118,6 +126,9 @@ export default function NetworksPage() {
               {n.gateway && <div className="flex justify-between"><span className="text-muted-foreground">Gateway</span><span className="font-mono text-foreground">{n.gateway}</span></div>}
               {n.dhcpRange && <div className="flex justify-between"><span className="text-muted-foreground">DHCP</span><span className="font-mono text-foreground">{n.dhcpRange}</span></div>}
               {n.domain && <div className="flex justify-between"><span className="text-muted-foreground">Domene</span><span className="font-mono text-foreground">{n.domain}</span></div>}
+              {n.firewallId && (() => { const fw = firewalls.find(f => f.id === n.firewallId); return fw ? (
+                <div className="flex justify-between"><span className="text-muted-foreground flex items-center gap-1"><Shield className="h-3 w-3" /> Brannmur</span><span className="text-foreground">{fw.name}</span></div>
+              ) : null; })()}
 
               {/* DNS section - always show if set */}
               {(n.dns1 || n.dns2) && (

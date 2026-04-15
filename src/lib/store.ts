@@ -68,6 +68,7 @@ export interface Device {
   notes?: string;
   image?: string;
   tags?: string[];
+  firewallId?: string; // linked firewall
   interfaces?: DeviceInterface[];
   routes?: DeviceRoute[];
   cables?: DeviceCable[];
@@ -141,6 +142,7 @@ export interface NetworkInfo {
   wanType?: "static" | "dhcp" | "pppoe";
   domain?: string;
   description?: string;
+  firewallId?: string; // linked firewall
 }
 
 // updateNetwork and updateFirewallRule are defined below their respective save functions
