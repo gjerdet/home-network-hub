@@ -215,6 +215,7 @@ const KEYS = {
   users: "netdocs_users",
   currentUser: "netdocs_current_user",
   zones: "netdocs_zones",
+  services: "netdocs_services",
 };
 
 // Devices
