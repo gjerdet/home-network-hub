@@ -17,7 +17,7 @@ export function TiptapEditor({ content, onChange, placeholder = "Skriv her..." }
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },
       }),
-      Link.configure({ openOnClick: false }),
+      Link.configure({ openOnClick: false, autolink: true }),
       Placeholder.configure({ placeholder }),
     ],
     content,
