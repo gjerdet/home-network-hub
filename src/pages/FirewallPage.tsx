@@ -330,11 +330,12 @@ export default function FirewallPage() {
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [allRules, setAllRules] = useState<FirewallRule[]>([]);
+  const [devices, setDevices] = useState<Device[]>([]);
 
   const emptyForm = { name: "", manufacturer: "", model: "", ip: "", os: "", description: "", status: "online" as Firewall["status"] };
   const [form, setForm] = useState(emptyForm);
 
-  const reload = () => { setFirewalls(getFirewalls()); setAllRules(getFirewallRules()); };
+  const reload = () => { setFirewalls(getFirewalls()); setAllRules(getFirewallRules()); setDevices(getDevices()); };
   useEffect(reload, []);
 
   const handleSave = () => {
