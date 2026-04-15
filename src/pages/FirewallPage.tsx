@@ -26,6 +26,7 @@ type ViewMode = "list" | "matrix";
 export default function FirewallPage() {
   const [rules, setRules] = useState<FirewallRule[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [expandedRule, setExpandedRule] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [zoneFilter, setZoneFilter] = useState<string | null>(null);
@@ -35,22 +36,41 @@ export default function FirewallPage() {
   const networkZones = networks.map(n => n.name.toUpperCase());
   const zones = [...new Set([...networkZones, ...defaultZones])].sort();
 
-  const [form, setForm] = useState({
+  const emptyForm = {
     name: "", action: "allow" as FirewallRule["action"], protocol: "TCP",
-    sourceZone: zones[0] || "LAN" as string, destinationZone: zones.includes("WAN") ? "WAN" : zones[1] || "WAN" as string,
+    sourceZone: "LAN" as string, destinationZone: "WAN" as string,
     source: "any", destination: "any", port: "",
     service: "", schedule: "", logging: true, enabled: true, notes: ""
-  });
+  };
+
+  const [form, setForm] = useState(emptyForm);
 
   useEffect(() => { setRules(getFirewallRules()); }, []);
 
   const handleSave = () => {
     if (!form.name) return;
-    const newRule = addFirewallRule({ ...form, order: rules.length, hitCount: 0 });
+    if (editId) {
+      updateFirewallRule(editId, form);
+    } else {
+      addFirewallRule({ ...form, order: rules.length, hitCount: 0 });
+    }
     setRules(getFirewallRules());
     setShowForm(false);
-    setExpandedRule(newRule.id);
-    setForm({ name: "", action: "allow", protocol: "TCP", sourceZone: "LAN", destinationZone: "WAN", source: "any", destination: "any", port: "", service: "", schedule: "", logging: true, enabled: true, notes: "" });
+    setEditId(null);
+    setForm(emptyForm);
+  };
+
+  const handleEdit = (r: FirewallRule) => {
+    setForm({
+      name: r.name, action: r.action, protocol: r.protocol,
+      sourceZone: r.sourceZone, destinationZone: r.destinationZone,
+      source: r.source, destination: r.destination, port: r.port,
+      service: r.service || "", schedule: r.schedule || "",
+      logging: r.logging, enabled: r.enabled, notes: r.notes || "",
+    });
+    setEditId(r.id);
+    setShowForm(true);
+    setExpandedRule(null);
   };
 
   const handleDelete = (id: string) => { deleteFirewallRule(id); setRules(getFirewallRules()); if (expandedRule === id) setExpandedRule(null); };
