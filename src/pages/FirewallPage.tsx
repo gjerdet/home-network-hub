@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, X, Save, Flame, ArrowUp, ArrowDown, Shield, ShieldOff, ChevronDown, ChevronRight, LayoutGrid, List, Edit2 } from "lucide-react";
 import { RuleFlowDiagram } from "@/components/RuleFlowDiagram";
+import { SubNav } from "@/components/SubNav";
 
 // No default zones — only from user's networks
 
@@ -104,19 +105,21 @@ export default function FirewallPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Brannmurregler</h1>
-          <p className="text-sm text-muted-foreground mt-1">{rules.length} regler</p>
-        </div>
-        <div className="flex gap-2">
-          <div className="flex bg-secondary rounded-md border border-border">
-            <button onClick={() => setViewMode("list")} className={`px-3 py-1.5 text-xs flex items-center gap-1 rounded-l-md transition-colors ${viewMode === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}><List className="h-3 w-3" /> Liste</button>
-            <button onClick={() => setViewMode("matrix")} className={`px-3 py-1.5 text-xs flex items-center gap-1 rounded-r-md transition-colors ${viewMode === "matrix" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}><LayoutGrid className="h-3 w-3" /> Matrise</button>
-          </div>
-          <Button onClick={() => { setShowForm(true); setEditId(null); setForm(emptyForm); }}><Plus className="h-4 w-4 mr-1" /> Ny regel</Button>
-        </div>
-      </div>
+      <SubNav
+        tabs={[
+          { key: "list", label: "Regler", icon: List },
+          { key: "matrix", label: "Matrise", icon: LayoutGrid },
+        ]}
+        active={viewMode}
+        onChange={k => setViewMode(k as any)}
+        right={
+          <Button size="sm" onClick={() => { setShowForm(true); setEditId(null); setForm(emptyForm); }}>
+            <Plus className="h-4 w-4 mr-1" /> Ny regel
+          </Button>
+        }
+      />
+
+      <p className="text-xs text-muted-foreground mb-4">{rules.length} regler</p>
 
       {/* Zone filter chips */}
       <div className="flex gap-2 mb-4 flex-wrap">
