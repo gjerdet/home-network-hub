@@ -2,7 +2,7 @@ import { useState } from "react";
 import { type Device, type DeviceInterface, type DeviceRoute, type DeviceCable, updateDevice, getDevices } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Save, X, Network, Route, Cable, Layers } from "lucide-react";
+import { Plus, Trash2, Save, X, Network, Route, Cable, Layers, Edit2, ChevronDown, ChevronRight } from "lucide-react";
 
 const ifaceTypes = ["ethernet", "wifi", "vlan", "bridge", "bond", "loopback", "tunnel", "other"] as const;
 const cableTypes = ["cat5e", "cat6", "cat6a", "cat7", "fiber-sm", "fiber-mm", "dac", "coax", "other"] as const;
@@ -24,6 +24,8 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
   // Interfaces
   const [showIfForm, setShowIfForm] = useState(false);
   const [showBulkForm, setShowBulkForm] = useState(false);
+  const [editingIfaceId, setEditingIfaceId] = useState<string | null>(null);
+  const [editIfForm, setEditIfForm] = useState<Partial<DeviceInterface>>({});
   const [ifForm, setIfForm] = useState({ name: "", type: "ethernet" as DeviceInterface["type"], ip: "", mac: "", speed: "", enabled: true, description: "", connectedTo: "", vlanId: "" });
   const [bulkForm, setBulkForm] = useState({ prefix: "eth", start: 0, count: 24, type: "ethernet" as DeviceInterface["type"], speed: "1G" });
 
@@ -59,6 +61,20 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
   const removeInterface = (id: string) => {
     updateDevice(device.id, { interfaces: (device.interfaces || []).filter(i => i.id !== id) });
     onUpdate();
+  };
+
+  const startEditIface = (iface: DeviceInterface) => {
+    setEditingIfaceId(iface.id);
+    setEditIfForm({ ...iface });
+  };
+
+  const saveEditIface = () => {
+    if (!editingIfaceId) return;
+    const ifaces = (device.interfaces || []).map(i => i.id === editingIfaceId ? { ...i, ...editIfForm } : i);
+    updateDevice(device.id, { interfaces: ifaces });
+    onUpdate();
+    setEditingIfaceId(null);
+    setEditIfForm({});
   };
 
   // Routes
@@ -142,18 +158,54 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
         {tab === "interfaces" && (
           <div>
             {ifaces.length > 0 && (
-              <div className="space-y-1 mb-3 max-h-[400px] overflow-y-auto">
+              <div className="space-y-1 mb-3 max-h-[500px] overflow-y-auto">
                 {ifaces.map(iface => (
-                  <div key={iface.id} className="flex items-center gap-3 bg-background rounded-md border border-border px-3 py-2 text-xs">
-                    <div className={`w-2 h-2 rounded-full ${iface.enabled ? "bg-success" : "bg-destructive"}`} />
-                    <span className="font-mono font-medium text-foreground w-20 truncate">{iface.name}</span>
-                    <span className="text-muted-foreground w-16">{iface.type}</span>
-                    {iface.ip && <span className="font-mono text-foreground">{iface.ip}</span>}
-                    {iface.mac && <span className="font-mono text-muted-foreground">{iface.mac}</span>}
-                    {iface.speed && <span className="bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">{iface.speed}</span>}
-                    {iface.vlanId && <span className="bg-info/15 text-info px-1.5 py-0.5 rounded">VLAN {iface.vlanId}</span>}
-                    {iface.connectedTo && <span className="text-muted-foreground">→ {iface.connectedTo}</span>}
-                    <button onClick={() => removeInterface(iface.id)} className="ml-auto text-muted-foreground hover:text-destructive"><Trash2 className="h-3 w-3" /></button>
+                  <div key={iface.id}>
+                    <div
+                      className={`flex items-center gap-3 bg-background rounded-md border px-3 py-2 text-xs cursor-pointer hover:border-primary/40 transition-colors ${editingIfaceId === iface.id ? "border-primary/50 bg-primary/5" : "border-border"}`}
+                      onClick={() => editingIfaceId === iface.id ? setEditingIfaceId(null) : startEditIface(iface)}
+                    >
+                      {editingIfaceId === iface.id ? <ChevronDown className="h-3 w-3 text-primary shrink-0" /> : <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />}
+                      <div className={`w-2 h-2 rounded-full shrink-0 ${iface.enabled ? "bg-success" : "bg-destructive"}`} />
+                      <span className="font-mono font-medium text-foreground w-24 truncate">{iface.name}</span>
+                      <span className="text-muted-foreground w-16">{iface.type}</span>
+                      {iface.ip && <span className="font-mono text-foreground">{iface.ip}</span>}
+                      {iface.mac && <span className="font-mono text-muted-foreground hidden lg:inline">{iface.mac}</span>}
+                      {iface.speed && <span className="bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">{iface.speed}</span>}
+                      {iface.vlanId && <span className="bg-info/15 text-info px-1.5 py-0.5 rounded">VLAN {iface.vlanId}</span>}
+                      {iface.connectedTo && <span className="text-muted-foreground">→ {iface.connectedTo}</span>}
+                      <button onClick={(e) => { e.stopPropagation(); removeInterface(iface.id); }} className="ml-auto text-muted-foreground hover:text-destructive shrink-0"><Trash2 className="h-3 w-3" /></button>
+                    </div>
+                    {/* Inline edit form */}
+                    {editingIfaceId === iface.id && (
+                      <div className="bg-primary/5 border border-primary/20 border-t-0 rounded-b-md p-3 space-y-3">
+                        <div className="grid grid-cols-4 gap-3">
+                          <div><label className="text-[10px] text-muted-foreground block mb-0.5">Navn</label><Input value={editIfForm.name || ""} onChange={e => setEditIfForm({ ...editIfForm, name: e.target.value })} className="bg-secondary border-border h-8 text-xs" /></div>
+                          <div><label className="text-[10px] text-muted-foreground block mb-0.5">Type</label><select value={editIfForm.type || "ethernet"} onChange={e => setEditIfForm({ ...editIfForm, type: e.target.value as any })} className={selectClass}>{ifaceTypes.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
+                          <div><label className="text-[10px] text-muted-foreground block mb-0.5">Status</label>
+                            <select value={editIfForm.enabled ? "up" : "down"} onChange={e => setEditIfForm({ ...editIfForm, enabled: e.target.value === "up" })} className={selectClass}>
+                              <option value="up">Oppe</option><option value="down">Nede</option>
+                            </select>
+                          </div>
+                          <div><label className="text-[10px] text-muted-foreground block mb-0.5">Hastighet</label><Input value={editIfForm.speed || ""} onChange={e => setEditIfForm({ ...editIfForm, speed: e.target.value })} placeholder="1G" className="bg-secondary border-border h-8 text-xs" /></div>
+                          <div><label className="text-[10px] text-muted-foreground block mb-0.5">IP-adresse</label><Input value={editIfForm.ip || ""} onChange={e => setEditIfForm({ ...editIfForm, ip: e.target.value })} className="bg-secondary border-border h-8 text-xs" /></div>
+                          <div><label className="text-[10px] text-muted-foreground block mb-0.5">MAC-adresse</label><Input value={editIfForm.mac || ""} onChange={e => setEditIfForm({ ...editIfForm, mac: e.target.value })} className="bg-secondary border-border h-8 text-xs" /></div>
+                          <div><label className="text-[10px] text-muted-foreground block mb-0.5">VLAN ID</label><Input value={editIfForm.vlanId || ""} onChange={e => setEditIfForm({ ...editIfForm, vlanId: e.target.value })} className="bg-secondary border-border h-8 text-xs" /></div>
+                          <div>
+                            <label className="text-[10px] text-muted-foreground block mb-0.5">Koblet til enhet</label>
+                            <select value={editIfForm.connectedTo || ""} onChange={e => setEditIfForm({ ...editIfForm, connectedTo: e.target.value })} className={selectClass}>
+                              <option value="">Ingen</option>
+                              {allDevices.map(d => <option key={d.id} value={d.name}>{d.name} ({d.ip})</option>)}
+                            </select>
+                          </div>
+                        </div>
+                        <div><label className="text-[10px] text-muted-foreground block mb-0.5">Beskrivelse</label><Input value={editIfForm.description || ""} onChange={e => setEditIfForm({ ...editIfForm, description: e.target.value })} className="bg-secondary border-border h-8 text-xs" /></div>
+                        <div className="flex gap-2 justify-end">
+                          <Button variant="ghost" size="sm" onClick={() => setEditingIfaceId(null)}>Avbryt</Button>
+                          <Button size="sm" onClick={saveEditIface}><Save className="h-3 w-3 mr-1" /> Lagre</Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

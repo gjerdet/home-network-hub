@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { getFirewallRules, addFirewallRule, deleteFirewallRule, saveFirewallRules, getNetworks, type FirewallRule, type FirewallZone } from "@/lib/store";
+import { getFirewallRules, addFirewallRule, deleteFirewallRule, saveFirewallRules, updateFirewallRule, getNetworks, type FirewallRule, type FirewallZone } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, X, Save, Flame, ArrowUp, ArrowDown, Shield, ShieldOff, ChevronDown, ChevronRight, LayoutGrid, List } from "lucide-react";
+import { Plus, Trash2, X, Save, Flame, ArrowUp, ArrowDown, Shield, ShieldOff, ChevronDown, ChevronRight, LayoutGrid, List, Edit2 } from "lucide-react";
 import { RuleFlowDiagram } from "@/components/RuleFlowDiagram";
 
 const defaultZones: string[] = ["WAN", "LAN", "DMZ", "WLAN", "VPN", "MGMT", "IOT", "GUEST"];
@@ -26,6 +26,7 @@ type ViewMode = "list" | "matrix";
 export default function FirewallPage() {
   const [rules, setRules] = useState<FirewallRule[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [expandedRule, setExpandedRule] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [zoneFilter, setZoneFilter] = useState<string | null>(null);
@@ -35,22 +36,41 @@ export default function FirewallPage() {
   const networkZones = networks.map(n => n.name.toUpperCase());
   const zones = [...new Set([...networkZones, ...defaultZones])].sort();
 
-  const [form, setForm] = useState({
+  const emptyForm = {
     name: "", action: "allow" as FirewallRule["action"], protocol: "TCP",
-    sourceZone: zones[0] || "LAN" as string, destinationZone: zones.includes("WAN") ? "WAN" : zones[1] || "WAN" as string,
+    sourceZone: "LAN" as string, destinationZone: "WAN" as string,
     source: "any", destination: "any", port: "",
     service: "", schedule: "", logging: true, enabled: true, notes: ""
-  });
+  };
+
+  const [form, setForm] = useState(emptyForm);
 
   useEffect(() => { setRules(getFirewallRules()); }, []);
 
   const handleSave = () => {
     if (!form.name) return;
-    const newRule = addFirewallRule({ ...form, order: rules.length, hitCount: 0 });
+    if (editId) {
+      updateFirewallRule(editId, form);
+    } else {
+      addFirewallRule({ ...form, order: rules.length, hitCount: 0 });
+    }
     setRules(getFirewallRules());
     setShowForm(false);
-    setExpandedRule(newRule.id);
-    setForm({ name: "", action: "allow", protocol: "TCP", sourceZone: "LAN", destinationZone: "WAN", source: "any", destination: "any", port: "", service: "", schedule: "", logging: true, enabled: true, notes: "" });
+    setEditId(null);
+    setForm(emptyForm);
+  };
+
+  const handleEdit = (r: FirewallRule) => {
+    setForm({
+      name: r.name, action: r.action, protocol: r.protocol,
+      sourceZone: r.sourceZone, destinationZone: r.destinationZone,
+      source: r.source, destination: r.destination, port: r.port,
+      service: r.service || "", schedule: r.schedule || "",
+      logging: r.logging, enabled: r.enabled, notes: r.notes || "",
+    });
+    setEditId(r.id);
+    setShowForm(true);
+    setExpandedRule(null);
   };
 
   const handleDelete = (id: string) => { deleteFirewallRule(id); setRules(getFirewallRules()); if (expandedRule === id) setExpandedRule(null); };
@@ -94,7 +114,7 @@ export default function FirewallPage() {
             <button onClick={() => setViewMode("list")} className={`px-3 py-1.5 text-xs flex items-center gap-1 rounded-l-md transition-colors ${viewMode === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}><List className="h-3 w-3" /> Liste</button>
             <button onClick={() => setViewMode("matrix")} className={`px-3 py-1.5 text-xs flex items-center gap-1 rounded-r-md transition-colors ${viewMode === "matrix" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}><LayoutGrid className="h-3 w-3" /> Matrise</button>
           </div>
-          <Button onClick={() => setShowForm(true)}><Plus className="h-4 w-4 mr-1" /> Ny regel</Button>
+          <Button onClick={() => { setShowForm(true); setEditId(null); setForm(emptyForm); }}><Plus className="h-4 w-4 mr-1" /> Ny regel</Button>
         </div>
       </div>
 
@@ -110,8 +130,8 @@ export default function FirewallPage() {
       {showForm && (
         <div className="bg-card border border-border rounded-lg p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Ny brannmurregel</h2>
-            <button onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-foreground"><X className="h-5 w-5" /></button>
+            <h2 className="text-lg font-semibold">{editId ? "Rediger brannmurregel" : "Ny brannmurregel"}</h2>
+            <button onClick={() => { setShowForm(false); setEditId(null); }} className="text-muted-foreground hover:text-foreground"><X className="h-5 w-5" /></button>
           </div>
 
           {/* Zone selection - SonicWall style */}
@@ -259,6 +279,7 @@ export default function FirewallPage() {
                   <td className="px-3 py-3 text-muted-foreground font-mono text-xs">{r.destination}</td>
                   <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
                     <div className="flex gap-1">
+                      <button onClick={() => handleEdit(r)} className="p-1 text-muted-foreground hover:text-primary"><Edit2 className="h-3 w-3" /></button>
                       <button onClick={() => moveRule(r.id, -1)} className="p-1 text-muted-foreground hover:text-foreground"><ArrowUp className="h-3 w-3" /></button>
                       <button onClick={() => moveRule(r.id, 1)} className="p-1 text-muted-foreground hover:text-foreground"><ArrowDown className="h-3 w-3" /></button>
                       <button onClick={() => toggleEnabled(r.id)} className="p-1 text-muted-foreground hover:text-foreground">{r.enabled ? <Shield className="h-3 w-3" /> : <ShieldOff className="h-3 w-3" />}</button>

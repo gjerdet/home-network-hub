@@ -111,8 +111,16 @@ export interface NetworkInfo {
   vlan?: string;
   gateway?: string;
   dhcpRange?: string;
+  dns1?: string;
+  dns2?: string;
+  wanAddress?: string;
+  wanGateway?: string;
+  wanType?: "static" | "dhcp" | "pppoe";
+  domain?: string;
   description?: string;
 }
+
+// updateNetwork and updateFirewallRule are defined below their respective save functions
 
 export interface UploadedFile {
   id: string;
@@ -214,6 +222,9 @@ export const addFirewallRule = (r: Omit<FirewallRule, "id">) => {
 export const deleteFirewallRule = (id: string) => {
   saveFirewallRules(getFirewallRules().filter(r => r.id !== id));
 };
+export const updateFirewallRule = (id: string, updates: Partial<FirewallRule>) => {
+  saveFirewallRules(getFirewallRules().map(r => r.id === id ? { ...r, ...updates } : r));
+};
 
 // Networks
 export const getNetworks = (): NetworkInfo[] => getItem(KEYS.networks, []);
@@ -227,6 +238,9 @@ export const addNetwork = (n: Omit<NetworkInfo, "id">) => {
 };
 export const deleteNetwork = (id: string) => {
   saveNetworks(getNetworks().filter(n => n.id !== id));
+};
+export const updateNetwork = (id: string, updates: Partial<NetworkInfo>) => {
+  saveNetworks(getNetworks().map(n => n.id === id ? { ...n, ...updates } : n));
 };
 
 // Files
