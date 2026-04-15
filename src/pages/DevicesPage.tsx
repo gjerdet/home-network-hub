@@ -425,6 +425,7 @@ export default function DevicesPage() {
       serialNumber: d.serialNumber || "", os: d.os || "", osVersion: d.osVersion || "",
       firmware: d.firmware || "", cpuCores: d.cpuCores, ramGb: d.ramGb, storageGb: d.storageGb,
       primaryInterface: d.primaryInterface || "", managementIp: d.managementIp || "",
+      managementVlan: d.managementVlan || "",
       site: d.site || "", rack: d.rack || "", rackPosition: d.rackPosition || "",
       tenant: d.tenant || "", assetTag: d.assetTag || "", purchaseDate: d.purchaseDate || "",
       warrantyEnd: d.warrantyEnd || "", notes: d.notes || "", tags: d.tags || [], firewallId: d.firewallId || "",
