@@ -59,7 +59,8 @@ export interface Device {
   managementIp?: string;
   site?: string;
   rack?: string;
-  rackPosition?: string;
+  rackPosition?: string; // starting U position e.g. "12"
+  rackHeight?: number; // how many U this device occupies, default 1
   tenant?: string;
   assetTag?: string;
   purchaseDate?: string;
