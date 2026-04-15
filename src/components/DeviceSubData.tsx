@@ -181,7 +181,9 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                       {iface.ip && <span className="font-mono text-foreground">{iface.ip}</span>}
                       {iface.mac && <span className="font-mono text-muted-foreground hidden lg:inline">{iface.mac}</span>}
                       {iface.speed && <span className="bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">{iface.speed}</span>}
+                      {iface.mode && <span className="bg-accent px-1.5 py-0.5 rounded text-accent-foreground text-[10px]">{ifaceModeLabels[iface.mode] || iface.mode}</span>}
                       {iface.vlanId && <span className="bg-info/15 text-info px-1.5 py-0.5 rounded">VLAN {iface.vlanId}</span>}
+                      {iface.taggedVlans && iface.taggedVlans.length > 0 && <span className="bg-warning/15 text-warning px-1.5 py-0.5 rounded text-[10px]">Tagged: {iface.taggedVlans.join(",")}</span>}
                       {iface.connectedTo && (
                         <span className="text-muted-foreground">
                           → {resolveDeviceName(iface.connectedTo)}
@@ -204,9 +206,50 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                           <div><label className="text-[10px] text-muted-foreground block mb-0.5">Hastighet</label><Input value={editIfForm.speed || ""} onChange={e => setEditIfForm({ ...editIfForm, speed: e.target.value })} placeholder="1G" className="bg-secondary border-border h-8 text-xs" /></div>
                           <div><label className="text-[10px] text-muted-foreground block mb-0.5">IP-adresse</label><Input value={editIfForm.ip || ""} onChange={e => setEditIfForm({ ...editIfForm, ip: e.target.value })} className="bg-secondary border-border h-8 text-xs" /></div>
                           <div><label className="text-[10px] text-muted-foreground block mb-0.5">MAC-adresse</label><Input value={editIfForm.mac || ""} onChange={e => setEditIfForm({ ...editIfForm, mac: e.target.value })} className="bg-secondary border-border h-8 text-xs" /></div>
-                          <div><label className="text-[10px] text-muted-foreground block mb-0.5">VLAN ID</label><Input value={editIfForm.vlanId || ""} onChange={e => setEditIfForm({ ...editIfForm, vlanId: e.target.value })} className="bg-secondary border-border h-8 text-xs" /></div>
-                          <div><label className="text-[10px] text-muted-foreground block mb-0.5">Hastighet</label></div>
+                          <div>
+                            <label className="text-[10px] text-muted-foreground block mb-0.5">Modus</label>
+                            <select value={editIfForm.mode || ""} onChange={e => setEditIfForm({ ...editIfForm, mode: e.target.value as any || undefined })} className={selectClass}>
+                              <option value="">Ingen</option>
+                              {ifaceModes.map(m => <option key={m} value={m}>{ifaceModeLabels[m]}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-muted-foreground block mb-0.5">Access VLAN</label>
+                            {availableVlans.length > 0 ? (
+                              <select value={editIfForm.vlanId || ""} onChange={e => setEditIfForm({ ...editIfForm, vlanId: e.target.value })} className={selectClass}>
+                                <option value="">Ingen</option>
+                                {availableVlans.map(v => <option key={v.vlan} value={v.vlan}>VLAN {v.vlan} – {v.name}</option>)}
+                              </select>
+                            ) : (
+                              <Input value={editIfForm.vlanId || ""} onChange={e => setEditIfForm({ ...editIfForm, vlanId: e.target.value })} placeholder="VLAN ID" className="bg-secondary border-border h-8 text-xs" />
+                            )}
+                          </div>
                         </div>
+                        {/* Tagged VLANs for trunk/hybrid */}
+                        {(editIfForm.mode === "trunk" || editIfForm.mode === "hybrid") && availableVlans.length > 0 && (
+                          <div>
+                            <label className="text-[10px] text-muted-foreground block mb-1">Tagged VLANs</label>
+                            <div className="flex flex-wrap gap-2">
+                              {availableVlans.map(v => {
+                                const tagged = editIfForm.taggedVlans || [];
+                                const isTagged = tagged.includes(v.vlan);
+                                return (
+                                  <button
+                                    key={v.vlan}
+                                    type="button"
+                                    onClick={() => {
+                                      const newTagged = isTagged ? tagged.filter(t => t !== v.vlan) : [...tagged, v.vlan];
+                                      setEditIfForm({ ...editIfForm, taggedVlans: newTagged });
+                                    }}
+                                    className={`px-2 py-1 rounded text-[10px] border transition-colors ${isTagged ? "bg-primary/20 text-primary border-primary/40" : "bg-secondary text-muted-foreground border-border hover:border-primary/30"}`}
+                                  >
+                                    VLAN {v.vlan} – {v.name}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                         {/* Connected device + interface */}
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold">Tilkobling</p>
                         <div className="grid grid-cols-2 gap-3">
