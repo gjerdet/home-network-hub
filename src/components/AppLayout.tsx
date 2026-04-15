@@ -1,16 +1,31 @@
 import { useState, useRef, useEffect } from "react";
-import { Monitor, FileText, Flame, Globe, FolderOpen, Users, LogOut, Search, ChevronDown, Server, Network, Cable, MapPin, Building2, Shield, LayoutGrid, Tag } from "lucide-react";
+import { Monitor, FileText, Flame, Globe, FolderOpen, Users, LogOut, Search, ChevronDown, Server, Network, Cable, MapPin, Building2, Shield, LayoutGrid, Tag, Download, Upload } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate, useLocation } from "react-router-dom";
-import { logout, getCurrentUser } from "@/lib/store";
+import { logout, getCurrentUser, exportBackup, importBackup } from "@/lib/store";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+
+interface NavItem {
+  title: string;
+  url: string;
+  icon: React.ElementType;
+}
+
+interface NavAction {
+  title: string;
+  icon: React.ElementType;
+  action: () => void;
+  separator?: boolean;
+}
 
 interface NavGroup {
   label: string;
-  items: { title: string; url: string; icon: React.ElementType }[];
+  items: NavItem[];
+  actions?: NavAction[];
 }
 
-const navGroups: NavGroup[] = [
+const makeNavGroups = (onExport: () => void, onImport: () => void): NavGroup[] => [
   {
     label: "Organisasjon",
     items: [
@@ -41,6 +56,10 @@ const navGroups: NavGroup[] = [
     items: [
       { title: "Dokumentasjon", url: "/docs", icon: FileText },
       { title: "Filer", url: "/files", icon: FolderOpen },
+    ],
+    actions: [
+      { title: "Eksporter backup", icon: Download, action: onExport, separator: true },
+      { title: "Importer backup", icon: Upload, action: onImport },
     ],
   },
 ];
@@ -102,6 +121,18 @@ function NavDropdown({ group }: { group: NavGroup }) {
               {item.title}
             </NavLink>
           ))}
+          {group.actions?.map((act, i) => (
+            <div key={act.title}>
+              {act.separator && <div className="h-px bg-border my-1" />}
+              <button
+                onClick={() => { act.action(); setOpen(false); }}
+                className="flex items-center gap-2 px-3 py-2 text-xs text-[hsl(var(--navbar-foreground))] hover:bg-[hsl(var(--border)/0.5)] hover:text-foreground transition-colors w-full text-left"
+              >
+                <act.icon className="h-3.5 w-3.5" />
+                {act.title}
+              </button>
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -112,6 +143,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,8 +157,44 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     navigate("/login");
   };
 
+  const handleExport = () => {
+    const data = exportBackup();
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `netdocs-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Backup eksportert");
+  };
+
+  const handleImport = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        importBackup(reader.result as string);
+        toast.success("Backup importert – laster på nytt...");
+        setTimeout(() => window.location.reload(), 1000);
+      } catch {
+        toast.error("Ugyldig backup-fil");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+
+  const navGroups = makeNavGroups(handleExport, handleImport);
+
   return (
     <div className="min-h-screen flex flex-col w-full bg-background">
+      <input type="file" ref={fileInputRef} accept=".json" onChange={handleFileChange} className="hidden" />
       {/* NetBox-style navbar */}
       <header className="h-11 flex items-center border-b border-border px-4 gap-2 bg-[hsl(var(--navbar))] shrink-0">
         <div className="flex items-center gap-2 mr-3">
