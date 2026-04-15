@@ -537,10 +537,19 @@ export default function DevicesPage() {
                 <option value="">Ingen</option>
                 {firewalls.map(fw => <option key={fw.id} value={fw.id}>{fw.name}{fw.ip ? ` (${fw.ip})` : ""}</option>)}
               </select>
-            </div>
+           </div>
           </div>
 
-
+          {!["router", "firewall"].includes(form.type) && (
+            <>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-3 mt-6">Management VLAN</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div><label className="text-xs text-muted-foreground mb-1 block">Management VLAN</label>
+                  <Input value={(form as any).managementVlan || ""} onChange={e => setForm({ ...form, managementVlan: e.target.value } as any)} placeholder="f.eks. 100" className="bg-secondary border-border" />
+                </div>
+              </div>
+            </>
+          )}
           <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-3 mt-6">Programvare</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div><label className="text-xs text-muted-foreground mb-1 block">Operativsystem</label>
