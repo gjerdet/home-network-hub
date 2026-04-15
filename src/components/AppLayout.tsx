@@ -6,12 +6,26 @@ import { logout, getCurrentUser, exportBackup, importBackup } from "@/lib/store"
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
-interface NavGroup {
-  label: string;
-  items: { title: string; url: string; icon: React.ElementType }[];
+interface NavItem {
+  title: string;
+  url: string;
+  icon: React.ElementType;
 }
 
-const navGroups: NavGroup[] = [
+interface NavAction {
+  title: string;
+  icon: React.ElementType;
+  action: () => void;
+  separator?: boolean;
+}
+
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+  actions?: NavAction[];
+}
+
+const makeNavGroups = (onExport: () => void, onImport: () => void): NavGroup[] => [
   {
     label: "Organisasjon",
     items: [
@@ -42,6 +56,10 @@ const navGroups: NavGroup[] = [
     items: [
       { title: "Dokumentasjon", url: "/docs", icon: FileText },
       { title: "Filer", url: "/files", icon: FolderOpen },
+    ],
+    actions: [
+      { title: "Eksporter backup", icon: Download, action: onExport, separator: true },
+      { title: "Importer backup", icon: Upload, action: onImport },
     ],
   },
 ];
