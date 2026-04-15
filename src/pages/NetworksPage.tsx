@@ -74,8 +74,9 @@ export default function NetworksPage() {
                 {firewalls.map(fw => <option key={fw.id} value={fw.id}>{fw.name}{fw.ip ? ` (${fw.ip})` : ""}</option>)}
               </select>
             </div>
+          </div>
 
-          {/* WAN - prominent section */}
+
           <div className="bg-secondary/50 border border-border rounded-lg p-4 mb-5">
             <div className="flex items-center gap-2 mb-3">
               <Wifi className="h-4 w-4 text-primary" />
