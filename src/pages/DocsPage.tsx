@@ -255,6 +255,14 @@ export default function DocsPage() {
           <div className="flex items-center gap-2 mb-2">
             <h2 className="text-sm font-semibold text-foreground flex-1">Dokumentasjon</h2>
             <button onClick={() => startNewDoc()} className="text-primary hover:text-primary/80" title="Nytt dokument"><Plus className="h-4 w-4" /></button>
+            <button onClick={() => {
+              // Create a folder/group page
+              const title = window.prompt("Mappenavn:");
+              if (title) {
+                addDoc({ title, content: "", category: "Generelt", tags: [] });
+                reload();
+              }
+            }} className="text-muted-foreground hover:text-primary" title="Ny mappe"><FolderPlus className="h-4 w-4" /></button>
           </div>
           <div className="relative">
             <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
