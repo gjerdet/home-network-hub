@@ -1,9 +1,11 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ResponsiveGridLayout as DashboardGrid } from "react-grid-layout";
+import * as RGL from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import type { LayoutItem } from "react-grid-layout";
+
+const DashboardGrid = (RGL as any).ResponsiveGridLayout;
 
 import {
   Monitor, Globe, Flame, FileText, Server, Shield, Wifi,
