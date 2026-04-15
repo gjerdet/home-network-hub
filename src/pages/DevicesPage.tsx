@@ -276,6 +276,11 @@ export default function DevicesPage() {
               </div>
             )}
 
+            {/* Sub-data tabs for interfaces, routes, cables */}
+            {expandedId === d.id && (
+              <DeviceSubData device={d} onUpdate={() => setDevices(getDevices())} />
+            )}
+
             {/* Actions */}
             <div className="flex gap-2 px-4 pb-3 pt-1 border-t border-border">
               <button onClick={() => handleEdit(d)} className="text-muted-foreground hover:text-primary text-xs flex items-center gap-1"><Edit2 className="h-3 w-3" /> Rediger</button>
