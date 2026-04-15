@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { getNetworks, addNetwork, deleteNetwork, updateNetwork, type NetworkInfo } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, X, Save, Globe, Edit2 } from "lucide-react";
+import { Plus, Trash2, X, Save, Globe, Edit2, Wifi, Server } from "lucide-react";
 
 const emptyForm = { name: "", subnet: "", vlan: "", gateway: "", dhcpRange: "", dns1: "", dns2: "", wanAddress: "", wanGateway: "", wanType: "dhcp" as NetworkInfo["wanType"], domain: "", description: "" };
 
@@ -59,7 +59,7 @@ export default function NetworksPage() {
 
           {/* Basic info */}
           <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-2">Grunnleggende</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-5">
             <div><label className="text-xs text-muted-foreground mb-1 block">Navn *</label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="bg-secondary border-border" placeholder="LAN" /></div>
             <div><label className="text-xs text-muted-foreground mb-1 block">Subnett *</label><Input value={form.subnet} onChange={e => setForm({ ...form, subnet: e.target.value })} className="bg-secondary border-border" placeholder="192.168.1.0/24" /></div>
             <div><label className="text-xs text-muted-foreground mb-1 block">VLAN</label><Input value={form.vlan} onChange={e => setForm({ ...form, vlan: e.target.value })} className="bg-secondary border-border" placeholder="10" /></div>
@@ -68,23 +68,33 @@ export default function NetworksPage() {
             <div><label className="text-xs text-muted-foreground mb-1 block">Domene</label><Input value={form.domain} onChange={e => setForm({ ...form, domain: e.target.value })} className="bg-secondary border-border" placeholder="local.lan" /></div>
           </div>
 
-          {/* DNS */}
-          <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-2">DNS</p>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div><label className="text-xs text-muted-foreground mb-1 block">Primær DNS</label><Input value={form.dns1} onChange={e => setForm({ ...form, dns1: e.target.value })} className="bg-secondary border-border" placeholder="1.1.1.1" /></div>
-            <div><label className="text-xs text-muted-foreground mb-1 block">Sekundær DNS</label><Input value={form.dns2} onChange={e => setForm({ ...form, dns2: e.target.value })} className="bg-secondary border-border" placeholder="8.8.8.8" /></div>
+          {/* WAN - prominent section */}
+          <div className="bg-secondary/50 border border-border rounded-lg p-4 mb-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Wifi className="h-4 w-4 text-primary" />
+              <p className="text-xs text-primary uppercase tracking-wide font-semibold">WAN / Internett</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div><label className="text-xs text-muted-foreground mb-1 block">WAN-type</label>
+                <select value={form.wanType} onChange={e => setForm({ ...form, wanType: e.target.value as any })} className={selectClass}>
+                  <option value="dhcp">DHCP</option><option value="static">Statisk</option><option value="pppoe">PPPoE</option>
+                </select>
+              </div>
+              <div><label className="text-xs text-muted-foreground mb-1 block">WAN-adresse</label><Input value={form.wanAddress} onChange={e => setForm({ ...form, wanAddress: e.target.value })} className="bg-secondary border-border" placeholder="84.215.x.x" /></div>
+              <div><label className="text-xs text-muted-foreground mb-1 block">WAN Gateway</label><Input value={form.wanGateway} onChange={e => setForm({ ...form, wanGateway: e.target.value })} className="bg-secondary border-border" placeholder="84.215.x.1" /></div>
+            </div>
           </div>
 
-          {/* WAN */}
-          <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-2">WAN</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-            <div><label className="text-xs text-muted-foreground mb-1 block">WAN-type</label>
-              <select value={form.wanType} onChange={e => setForm({ ...form, wanType: e.target.value as any })} className={selectClass}>
-                <option value="dhcp">DHCP</option><option value="static">Statisk</option><option value="pppoe">PPPoE</option>
-              </select>
+          {/* DNS - prominent section */}
+          <div className="bg-secondary/50 border border-border rounded-lg p-4 mb-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Server className="h-4 w-4 text-primary" />
+              <p className="text-xs text-primary uppercase tracking-wide font-semibold">DNS</p>
             </div>
-            <div><label className="text-xs text-muted-foreground mb-1 block">WAN-adresse</label><Input value={form.wanAddress} onChange={e => setForm({ ...form, wanAddress: e.target.value })} className="bg-secondary border-border" placeholder="84.215.x.x" /></div>
-            <div><label className="text-xs text-muted-foreground mb-1 block">WAN Gateway</label><Input value={form.wanGateway} onChange={e => setForm({ ...form, wanGateway: e.target.value })} className="bg-secondary border-border" placeholder="84.215.x.1" /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="text-xs text-muted-foreground mb-1 block">Primær DNS</label><Input value={form.dns1} onChange={e => setForm({ ...form, dns1: e.target.value })} className="bg-secondary border-border" placeholder="1.1.1.1" /></div>
+              <div><label className="text-xs text-muted-foreground mb-1 block">Sekundær DNS</label><Input value={form.dns2} onChange={e => setForm({ ...form, dns2: e.target.value })} className="bg-secondary border-border" placeholder="8.8.8.8" /></div>
+            </div>
           </div>
 
           <div><label className="text-xs text-muted-foreground mb-1 block">Beskrivelse</label><textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="w-full h-16 rounded-md bg-secondary border border-border px-3 py-2 text-sm text-foreground resize-none" /></div>
@@ -108,13 +118,22 @@ export default function NetworksPage() {
               {n.gateway && <div className="flex justify-between"><span className="text-muted-foreground">Gateway</span><span className="font-mono text-foreground">{n.gateway}</span></div>}
               {n.dhcpRange && <div className="flex justify-between"><span className="text-muted-foreground">DHCP</span><span className="font-mono text-foreground">{n.dhcpRange}</span></div>}
               {n.domain && <div className="flex justify-between"><span className="text-muted-foreground">Domene</span><span className="font-mono text-foreground">{n.domain}</span></div>}
+
+              {/* DNS section - always show if set */}
               {(n.dns1 || n.dns2) && (
-                <div className="flex justify-between"><span className="text-muted-foreground">DNS</span><span className="font-mono text-foreground">{[n.dns1, n.dns2].filter(Boolean).join(", ")}</span></div>
-              )}
-              {n.wanAddress && (
                 <div className="pt-2 mt-2 border-t border-border space-y-2">
-                  <div className="flex justify-between"><span className="text-muted-foreground">WAN</span><span className="font-mono text-foreground">{n.wanAddress}</span></div>
-                  {n.wanGateway && <div className="flex justify-between"><span className="text-muted-foreground">WAN GW</span><span className="font-mono text-foreground">{n.wanGateway}</span></div>}
+                  <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1"><Server className="h-3 w-3" /> DNS</p>
+                  {n.dns1 && <div className="flex justify-between"><span className="text-muted-foreground">Primær</span><span className="font-mono text-foreground">{n.dns1}</span></div>}
+                  {n.dns2 && <div className="flex justify-between"><span className="text-muted-foreground">Sekundær</span><span className="font-mono text-foreground">{n.dns2}</span></div>}
+                </div>
+              )}
+
+              {/* WAN section - always show if set */}
+              {(n.wanAddress || n.wanGateway || n.wanType) && (
+                <div className="pt-2 mt-2 border-t border-border space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1"><Wifi className="h-3 w-3" /> WAN</p>
+                  {n.wanAddress && <div className="flex justify-between"><span className="text-muted-foreground">Adresse</span><span className="font-mono text-foreground">{n.wanAddress}</span></div>}
+                  {n.wanGateway && <div className="flex justify-between"><span className="text-muted-foreground">Gateway</span><span className="font-mono text-foreground">{n.wanGateway}</span></div>}
                   {n.wanType && <div className="flex justify-between"><span className="text-muted-foreground">Type</span><span className="text-foreground uppercase text-xs">{n.wanType}</span></div>}
                 </div>
               )}
