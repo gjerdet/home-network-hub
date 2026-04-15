@@ -229,6 +229,11 @@ export default function DocsPage() {
               {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
             </button>
           ) : (
+            <span className="w-3.5 shrink-0" />
+          )}
+          {hasChildren || !node.doc.content ? (
+            <Folder className="h-3.5 w-3.5 text-warning/70 shrink-0" />
+          ) : (
             <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
           )}
           <span className="truncate flex-1">{node.doc.title}</span>
