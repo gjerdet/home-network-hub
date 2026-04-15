@@ -1,7 +1,6 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-import RGL from "react-grid-layout";
+import * as RGL from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import type { LayoutItem } from "react-grid-layout";
