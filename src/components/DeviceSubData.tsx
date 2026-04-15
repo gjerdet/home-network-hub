@@ -46,10 +46,65 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
     return found ? found.name : ref;
   };
 
+  const syncReverseInterfaceLink = ({
+    previousInterface,
+    nextInterface,
+  }: {
+    previousInterface?: DeviceInterface;
+    nextInterface?: DeviceInterface;
+  }) => {
+    const clearRemoteLink = (remoteDeviceId?: string, remoteInterfaceName?: string, localInterfaceName?: string) => {
+      if (!remoteDeviceId || !remoteInterfaceName || !localInterfaceName) return;
+      const remoteDevice = getDevices().find(d => d.id === remoteDeviceId);
+      if (!remoteDevice?.interfaces?.length) return;
+
+      updateDevice(remoteDeviceId, {
+        interfaces: remoteDevice.interfaces.map(iface =>
+          iface.name === remoteInterfaceName &&
+          iface.connectedTo === device.id &&
+          iface.connectedToInterface === localInterfaceName
+            ? { ...iface, connectedTo: "", connectedToInterface: "" }
+            : iface
+        ),
+      });
+    };
+
+    const setRemoteLink = (remoteDeviceId?: string, remoteInterfaceName?: string, localInterfaceName?: string) => {
+      if (!remoteDeviceId || !remoteInterfaceName || !localInterfaceName) return;
+      const remoteDevice = getDevices().find(d => d.id === remoteDeviceId);
+      if (!remoteDevice?.interfaces?.length) return;
+
+      updateDevice(remoteDeviceId, {
+        interfaces: remoteDevice.interfaces.map(iface =>
+          iface.name === remoteInterfaceName
+            ? { ...iface, connectedTo: device.id, connectedToInterface: localInterfaceName }
+            : iface
+        ),
+      });
+    };
+
+    if (
+      previousInterface?.connectedTo &&
+      previousInterface.connectedToInterface &&
+      (
+        previousInterface.connectedTo !== nextInterface?.connectedTo ||
+        previousInterface.connectedToInterface !== nextInterface?.connectedToInterface ||
+        previousInterface.name !== nextInterface?.name
+      )
+    ) {
+      clearRemoteLink(previousInterface.connectedTo, previousInterface.connectedToInterface, previousInterface.name);
+    }
+
+    if (nextInterface?.connectedTo && nextInterface.connectedToInterface) {
+      setRemoteLink(nextInterface.connectedTo, nextInterface.connectedToInterface, nextInterface.name);
+    }
+  };
+
   const addInterface = () => {
     if (!ifForm.name) return;
-    const ifaces = [...(device.interfaces || []), { id: crypto.randomUUID(), ...ifForm }];
-    updateDevice(device.id, { interfaces: ifaces });
+    const newInterface: DeviceInterface = { id: crypto.randomUUID(), ...ifForm };
+    updateDevice(device.id, { interfaces: [...(device.interfaces || []), newInterface] });
+    syncReverseInterfaceLink({ nextInterface: newInterface });
     onUpdate();
     setShowIfForm(false);
     setIfForm({ name: "", type: "ethernet", ip: "", mac: "", speed: "", enabled: true, description: "", connectedTo: "", connectedToInterface: "", vlanId: "" });
@@ -97,6 +152,10 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
   };
 
   const removeInterface = (id: string) => {
+    const interfaceToRemove = (device.interfaces || []).find(i => i.id === id);
+    if (interfaceToRemove) {
+      syncReverseInterfaceLink({ previousInterface: interfaceToRemove });
+    }
     updateDevice(device.id, { interfaces: (device.interfaces || []).filter(i => i.id !== id) });
     onUpdate();
   };
@@ -108,8 +167,13 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
 
   const saveEditIface = () => {
     if (!editingIfaceId) return;
-    const ifaces = (device.interfaces || []).map(i => i.id === editingIfaceId ? { ...i, ...editIfForm } : i);
+    const previousInterface = (device.interfaces || []).find(i => i.id === editingIfaceId);
+    if (!previousInterface) return;
+
+    const nextInterface: DeviceInterface = { ...previousInterface, ...editIfForm };
+    const ifaces = (device.interfaces || []).map(i => i.id === editingIfaceId ? nextInterface : i);
     updateDevice(device.id, { interfaces: ifaces });
+    syncReverseInterfaceLink({ previousInterface, nextInterface });
     onUpdate();
     setEditingIfaceId(null);
     setEditIfForm({});
