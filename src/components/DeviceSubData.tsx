@@ -7,6 +7,7 @@ import { Plus, Trash2, Save, X, Network, Route, Cable, Layers, Edit2, ChevronDow
 const ifaceTypes = ["ethernet", "wifi", "vlan", "bridge", "bond", "loopback", "tunnel", "other"] as const;
 const ifaceModes = ["access", "trunk", "hybrid", "routed"] as const;
 const ifaceModeLabels: Record<string, string> = { access: "Access", trunk: "Trunk", hybrid: "Hybrid", routed: "Routed" };
+const ifaceSpeeds = ["10M", "100M", "1G", "2.5G", "5G", "10G", "25G", "40G", "100G"] as const;
 const cableTypes = ["cat5e", "cat6", "cat6a", "cat7", "fiber-sm", "fiber-mm", "dac", "coax", "other"] as const;
 const cableTypeLabels: Record<string, string> = { "cat5e": "Cat5e", "cat6": "Cat6", "cat6a": "Cat6a", "cat7": "Cat7", "fiber-sm": "Fiber SM", "fiber-mm": "Fiber MM", "dac": "DAC", "coax": "Coax", "other": "Annet" };
 const cableStatusLabels: Record<string, string> = { connected: "Tilkoblet", planned: "Planlagt", broken: "Ødelagt" };
