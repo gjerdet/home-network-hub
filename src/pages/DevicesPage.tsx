@@ -342,7 +342,6 @@ export default function DevicesPage() {
       />
 
       <p className="text-xs text-muted-foreground mb-4">{devices.length} enheter · {filtered.length} vises</p>
-      </div>
 
       {/* Filters bar */}
       <div className="flex gap-3 mb-4 items-center flex-wrap">
