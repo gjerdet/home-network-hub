@@ -77,8 +77,11 @@ function Panel({ title, children, defaultOpen = true }: { title: string; childre
 function DeviceDetail({ device, onBack, onEdit, onDelete, onUpdate }: {
   device: Device; onBack: () => void; onEdit: (d: Device) => void; onDelete: (id: string) => void; onUpdate: () => void;
 }) {
-  const [detailTab, setDetailTab] = useState<"info" | "interfaces" | "routes" | "cables">("info");
+  const [detailTab, setDetailTab] = useState<"info" | "interfaces" | "routes" | "cables" | "ssids">("info");
   const s = statusBadge[device.status];
+  const networks = getNetworks();
+  const showMgmtVlan = !["router", "firewall"].includes(device.type);
+  const isAP = device.type === "ap";
 
   return (
     <div>
