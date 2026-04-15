@@ -114,7 +114,7 @@ export default function FirewallPage() {
             <button onClick={() => setViewMode("list")} className={`px-3 py-1.5 text-xs flex items-center gap-1 rounded-l-md transition-colors ${viewMode === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}><List className="h-3 w-3" /> Liste</button>
             <button onClick={() => setViewMode("matrix")} className={`px-3 py-1.5 text-xs flex items-center gap-1 rounded-r-md transition-colors ${viewMode === "matrix" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}><LayoutGrid className="h-3 w-3" /> Matrise</button>
           </div>
-          <Button onClick={() => setShowForm(true)}><Plus className="h-4 w-4 mr-1" /> Ny regel</Button>
+          <Button onClick={() => { setShowForm(true); setEditId(null); setForm(emptyForm); }}><Plus className="h-4 w-4 mr-1" /> Ny regel</Button>
         </div>
       </div>
 
