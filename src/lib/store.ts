@@ -233,6 +233,26 @@ export const deleteDoc = (id: string) => {
   saveDocs(getDocs().filter(d => d.id !== id));
 };
 
+// Firewalls
+export const getFirewalls = (): Firewall[] => getItem(KEYS.firewalls, []);
+export const saveFirewalls = (f: Firewall[]) => setItem(KEYS.firewalls, f);
+export const addFirewall = (f: Omit<Firewall, "id" | "createdAt" | "updatedAt">) => {
+  const list = getFirewalls();
+  const now = new Date().toISOString();
+  const fw: Firewall = { ...f, id: crypto.randomUUID(), createdAt: now, updatedAt: now };
+  list.push(fw);
+  saveFirewalls(list);
+  return fw;
+};
+export const updateFirewall = (id: string, u: Partial<Firewall>) => {
+  saveFirewalls(getFirewalls().map(f => f.id === id ? { ...f, ...u, updatedAt: new Date().toISOString() } : f));
+};
+export const deleteFirewall = (id: string) => {
+  saveFirewalls(getFirewalls().filter(f => f.id !== id));
+  // Also delete all rules for this firewall
+  saveFirewallRules(getFirewallRules().filter(r => r.firewallId !== id));
+};
+
 // Firewall Rules
 export const getFirewallRules = (): FirewallRule[] => getItem(KEYS.firewallRules, []);
 export const saveFirewallRules = (r: FirewallRule[]) => setItem(KEYS.firewallRules, r);
