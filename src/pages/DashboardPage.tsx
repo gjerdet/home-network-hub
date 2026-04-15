@@ -48,10 +48,10 @@ const WIDGET_DEFS: { id: string; title: string; defaultLayout: { w: number; h: n
   { id: "topology", title: "Nettverkstopologi", defaultLayout: { w: 12, h: 10, minW: 6, minH: 6 } },
 ];
 
-const buildDefaultLayouts = (): { lg: Layout[] } => {
+const buildDefaultLayouts = (): { lg: LayoutItemItem[] } => {
   let y = 0;
-  const lg: Layout[] = WIDGET_DEFS.map(def => {
-    const item: Layout = {
+  const lg: LayoutItem[] = WIDGET_DEFS.map(def => {
+    const item: LayoutItem = {
       i: def.id,
       x: 0, y,
       w: def.defaultLayout.w,
@@ -162,7 +162,7 @@ export default function DashboardPage() {
     catch { return null; }
   };
 
-  const onLayoutChange = useCallback((_: Layout[], allLayouts: Record<string, Layout[]>) => {
+  const onLayoutChange = useCallback((_: LayoutItem[], allLayouts: Record<string, LayoutItem[]>) => {
     setLayouts(allLayouts);
     localStorage.setItem(LAYOUT_KEY, JSON.stringify(allLayouts));
   }, []);
