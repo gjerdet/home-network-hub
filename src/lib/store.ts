@@ -1,5 +1,39 @@
 // Local storage based data store for all app data
 
+export interface DeviceInterface {
+  id: string;
+  name: string; // eth0, ens18, etc
+  type: "ethernet" | "wifi" | "vlan" | "bridge" | "bond" | "loopback" | "tunnel" | "other";
+  ip?: string;
+  mac?: string;
+  speed?: string; // 1G, 10G, etc
+  enabled: boolean;
+  description?: string;
+  connectedTo?: string; // device name or id
+  vlanId?: string;
+}
+
+export interface DeviceRoute {
+  id: string;
+  destination: string; // 0.0.0.0/0, 10.0.0.0/8
+  gateway: string;
+  metric?: number;
+  interface?: string;
+  description?: string;
+}
+
+export interface DeviceCable {
+  id: string;
+  label?: string;
+  type: "cat5e" | "cat6" | "cat6a" | "cat7" | "fiber-sm" | "fiber-mm" | "dac" | "coax" | "other";
+  localPort: string;
+  remoteDevice?: string;
+  remotePort?: string;
+  length?: string;
+  color?: string;
+  status: "connected" | "planned" | "broken";
+}
+
 export interface Device {
   id: string;
   name: string;
@@ -30,6 +64,9 @@ export interface Device {
   notes?: string;
   image?: string;
   tags?: string[];
+  interfaces?: DeviceInterface[];
+  routes?: DeviceRoute[];
+  cables?: DeviceCable[];
   createdAt: string;
   updatedAt: string;
 }
@@ -51,14 +88,21 @@ export interface FirewallRule {
   name: string;
   action: "allow" | "deny" | "reject";
   protocol: string;
+  sourceZone: string;
+  destinationZone: string;
   source: string;
   destination: string;
   port: string;
-  direction: "inbound" | "outbound";
+  service?: string;
+  schedule?: string;
+  logging: boolean;
   enabled: boolean;
   notes?: string;
   order: number;
+  hitCount?: number;
 }
+
+export type FirewallZone = "WAN" | "LAN" | "DMZ" | "WLAN" | "VPN" | "MGMT" | "IOT" | "GUEST";
 
 export interface NetworkInfo {
   id: string;

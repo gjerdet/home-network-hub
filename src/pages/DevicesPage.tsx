@@ -3,6 +3,7 @@ import { getDevices, addDevice, deleteDevice, updateDevice, type Device, type De
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Edit2, Monitor, Wifi, Server, HardDrive, Shield, Radio, X, Save, Box, Cpu, Zap, Battery, ChevronDown, ChevronRight } from "lucide-react";
+import { DeviceSubData } from "@/components/DeviceSubData";
 
 const typeIcons: Record<DeviceType, React.ReactNode> = {
   router: <Wifi className="h-5 w-5" />,
@@ -49,7 +50,7 @@ const typeLabels: Record<DeviceType, string> = {
   firewall: "Brannmur", vm: "Virtuell maskin", container: "Container", pdu: "PDU", ups: "UPS", other: "Annet"
 };
 
-const commonOS = ["pfSense", "OPNsense", "Ubuntu Server", "Debian", "CentOS", "Rocky Linux", "Windows Server", "Proxmox VE", "ESXi", "TrueNAS", "UniFi OS", "RouterOS", "Cisco IOS", "Annet"];
+const commonOS = ["pfSense", "OPNsense", "Ubuntu Server", "Ubuntu Desktop", "Debian", "CentOS", "Rocky Linux", "AlmaLinux", "Fedora Server", "Arch Linux", "Alpine Linux", "FreeBSD", "OpenBSD", "Windows Server", "Windows 10", "Windows 11", "Proxmox VE", "ESXi", "Hyper-V", "TrueNAS CORE", "TrueNAS SCALE", "UniFi OS", "RouterOS (MikroTik)", "Cisco IOS", "Cisco IOS-XE", "Junos OS", "Aruba OS", "FortiOS", "SonicOS", "DD-WRT", "OpenWrt", "VyOS", "Synology DSM", "QNAP QTS", "Home Assistant OS", "Docker", "Kubernetes"];
 
 const emptyDevice = {
   name: "", ip: "", mac: "", type: "router" as DeviceType, role: "", status: "online" as Device["status"],
@@ -164,13 +165,16 @@ export default function DevicesPage() {
           <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-3 mt-6">Programvare</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div><label className="text-xs text-muted-foreground mb-1 block">Operativsystem</label>
-              <select value={commonOS.includes(form.os) ? form.os : form.os ? "Annet" : ""} onChange={e => setForm({ ...form, os: e.target.value === "Annet" ? form.os : e.target.value })} className={selectClass}>
-                <option value="">Velg OS...</option>
-                {commonOS.map(os => <option key={os} value={os}>{os}</option>)}
-              </select>
-              {!commonOS.includes(form.os) && form.os !== "" && (
-                <Input value={form.os} onChange={e => setForm({ ...form, os: e.target.value })} placeholder="Egendefinert OS" className="bg-secondary border-border mt-2" />
-              )}
+              <Input
+                list="os-list"
+                value={form.os}
+                onChange={e => setForm({ ...form, os: e.target.value })}
+                placeholder="Skriv eller velg OS..."
+                className="bg-secondary border-border"
+              />
+              <datalist id="os-list">
+                {commonOS.map(os => <option key={os} value={os} />)}
+              </datalist>
             </div>
             <div><label className="text-xs text-muted-foreground mb-1 block">OS-versjon</label><Input value={form.osVersion} onChange={e => setForm({ ...form, osVersion: e.target.value })} placeholder="f.eks. 22.04 LTS" className="bg-secondary border-border" /></div>
             <div><label className="text-xs text-muted-foreground mb-1 block">Firmware</label><Input value={form.firmware} onChange={e => setForm({ ...form, firmware: e.target.value })} className="bg-secondary border-border" /></div>
@@ -270,6 +274,11 @@ export default function DevicesPage() {
                 {d.warrantyEnd && <div className="flex justify-between"><span className="text-muted-foreground">Garanti</span><span className="text-foreground">{d.warrantyEnd}</span></div>}
                 {d.notes && <p className="text-muted-foreground pt-1 border-t border-border mt-2">{d.notes}</p>}
               </div>
+            )}
+
+            {/* Sub-data tabs for interfaces, routes, cables */}
+            {expandedId === d.id && (
+              <DeviceSubData device={d} onUpdate={() => setDevices(getDevices())} />
             )}
 
             {/* Actions */}
