@@ -419,7 +419,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
             ) : ifaces.length > 0 && !showBulkForm && (
               <div className="flex gap-3 mt-2">
                 <button onClick={() => setShowIfForm(true)} className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"><Plus className="h-3 w-3" /> Legg til enkelt</button>
-                <button onClick={() => setShowBulkForm(true)} className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"><Layers className="h-3 w-3" /> Generer flere</button>
+                <button onClick={openBulkForm} className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"><Layers className="h-3 w-3" /> Generer flere</button>
               </div>
             )}
           </div>
