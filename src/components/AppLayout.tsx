@@ -121,6 +121,18 @@ function NavDropdown({ group }: { group: NavGroup }) {
               {item.title}
             </NavLink>
           ))}
+          {group.actions?.map((act, i) => (
+            <div key={act.title}>
+              {act.separator && <div className="h-px bg-border my-1" />}
+              <button
+                onClick={() => { act.action(); setOpen(false); }}
+                className="flex items-center gap-2 px-3 py-2 text-xs text-[hsl(var(--navbar-foreground))] hover:bg-[hsl(var(--border)/0.5)] hover:text-foreground transition-colors w-full text-left"
+              >
+                <act.icon className="h-3.5 w-3.5" />
+                {act.title}
+              </button>
+            </div>
+          ))}
         </div>
       )}
     </div>
