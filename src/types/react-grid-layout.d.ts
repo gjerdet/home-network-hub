@@ -35,13 +35,17 @@ declare module "react-grid-layout" {
     width?: number;
   }
 
-  export class Responsive extends React.Component<ReactGridLayoutProps> {}
-
-  export default class ReactGridLayout extends React.Component<ReactGridLayoutProps> {}
-
-  export function WidthProvider<P extends object>(
+  class Responsive extends React.Component<ReactGridLayoutProps> {}
+  function WidthProvider<P extends object>(
     component: React.ComponentType<P>
   ): React.ComponentType<Omit<P, "width">>;
+
+  class ReactGridLayout extends React.Component<ReactGridLayoutProps> {
+    static Responsive: typeof Responsive;
+    static WidthProvider: typeof WidthProvider;
+  }
+
+  export default ReactGridLayout;
 }
 
 declare module "react-grid-layout/css/styles.css" {}
