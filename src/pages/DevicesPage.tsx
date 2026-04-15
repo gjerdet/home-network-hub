@@ -338,14 +338,13 @@ export default function DevicesPage() {
         right={
           <div className="flex gap-2">
             {devices.length > 0 && (
-              <Button variant="outline" size="sm" onClick={() => {
-                if (confirm("Er du sikker på at du vil slette alle enheter?")) {
-                  saveDevices([]);
-                  refreshDevices();
-                }
-              }}>
-                <Trash2 className="h-3 w-3 mr-1" /> Slett alle
-              </Button>
+              <ConfirmDialog
+                trigger={<Button variant="outline" size="sm"><Trash2 className="h-3 w-3 mr-1" /> Slett alle</Button>}
+                title="Slett alle enheter"
+                description="Er du sikker på at du vil slette ALLE enheter? Denne handlingen kan ikke angres."
+                confirmLabel="Slett alle"
+                onConfirm={() => { saveDevices([]); refreshDevices(); }}
+              />
             )}
             <Button size="sm" onClick={() => { setShowForm(true); setEditId(null); setForm(emptyDevice); setTagsInput(""); setShowAdvanced(false); }}>
               <Plus className="h-4 w-4 mr-1" /> Ny enhet
