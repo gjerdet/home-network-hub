@@ -14,6 +14,7 @@ import FilesPage from "./pages/FilesPage";
 import UsersPage from "./pages/UsersPage";
 import SearchPage from "./pages/SearchPage";
 import IPAMPage from "./pages/IPAMPage";
+import DashboardPage from "./pages/DashboardPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,7 +33,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={<Navigate to="/devices" replace />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/devices" element={<ProtectedRoute><DevicesPage /></ProtectedRoute>} />
           <Route path="/docs" element={<ProtectedRoute><DocsPage /></ProtectedRoute>} />
           <Route path="/firewall" element={<ProtectedRoute><FirewallPage /></ProtectedRoute>} />
