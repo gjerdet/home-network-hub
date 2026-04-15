@@ -59,6 +59,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
     if (!bulkForm.prefix || bulkForm.count < 1) return;
     const existing = device.interfaces || [];
     const newIfaces: DeviceInterface[] = [];
+    // Use the actual start number from the form
     for (let i = 0; i < bulkForm.count; i++) {
       newIfaces.push({
         id: crypto.randomUUID(),
@@ -72,7 +73,27 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
     updateDevice(device.id, { interfaces: [...existing, ...newIfaces] });
     onUpdate();
     setShowBulkForm(false);
-    setBulkForm({ prefix: "eth", start: 0, count: 24, type: "ethernet", speed: "1G" });
+  };
+
+  // Calculate next available start number based on existing interfaces with same prefix
+  const getNextStart = (prefix: string) => {
+    const existing = device.interfaces || [];
+    let maxNum = -1;
+    existing.forEach(iface => {
+      if (iface.name.startsWith(prefix)) {
+        const numPart = iface.name.slice(prefix.length);
+        const num = parseInt(numPart);
+        if (!isNaN(num) && num > maxNum) maxNum = num;
+      }
+    });
+    return maxNum + 1;
+  };
+
+  const openBulkForm = () => {
+    const prefix = bulkForm.prefix || "eth";
+    const nextStart = getNextStart(prefix);
+    setBulkForm(f => ({ ...f, prefix, start: nextStart }));
+    setShowBulkForm(true);
   };
 
   const removeInterface = (id: string) => {
