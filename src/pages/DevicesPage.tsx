@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getDevices, addDevice, deleteDevice, updateDevice, saveDevices, type Device, type DeviceType } from "@/lib/store";
+import { getDevices, addDevice, deleteDevice, updateDevice, saveDevices, getFirewalls, type Device, type DeviceType, type Firewall } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Edit2, Monitor, Wifi, Server, HardDrive, Shield, Radio, X, Save, Box, Cpu, Zap, Battery, ChevronDown, ChevronRight, ArrowLeft, ExternalLink, Copy, Network, Route, Cable, Share2, List, LayoutGrid } from "lucide-react";
@@ -42,7 +42,7 @@ const emptyDevice = {
   location: "", manufacturer: "", model: "", serialNumber: "", os: "", osVersion: "", firmware: "",
   cpuCores: undefined as number | undefined, ramGb: undefined as number | undefined, storageGb: undefined as number | undefined,
   primaryInterface: "", managementIp: "", site: "", rack: "", rackPosition: "", tenant: "",
-  assetTag: "", purchaseDate: "", warrantyEnd: "", notes: "", tags: [] as string[],
+  assetTag: "", purchaseDate: "", warrantyEnd: "", notes: "", tags: [] as string[], firewallId: "",
 };
 
 // ── NetBox-style info row ──
@@ -228,6 +228,7 @@ function DeviceDetail({ device, onBack, onEdit, onDelete, onUpdate }: {
 // ═══════════════════════════════════════════
 export default function DevicesPage() {
   const [devices, setDevices] = useState<Device[]>([]);
+  const [firewalls, setFirewalls] = useState<Firewall[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
@@ -238,7 +239,7 @@ export default function DevicesPage() {
   const [tagsInput, setTagsInput] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "topology" | "rack">("list");
-  useEffect(() => { setDevices(getDevices()); }, []);
+  useEffect(() => { setDevices(getDevices()); setFirewalls(getFirewalls()); }, []);
 
   const refreshDevices = () => {
     const updated = getDevices();
