@@ -329,7 +329,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                 <p className="text-xs text-muted-foreground/70 mb-4">Legg til enkeltvis eller generer flere porter på en gang.</p>
                 <div className="flex gap-2">
                   <Button size="sm" onClick={() => setShowIfForm(true)}><Plus className="h-3 w-3 mr-1" /> Enkelt</Button>
-                  <Button size="sm" variant="outline" onClick={() => setShowBulkForm(true)}><Layers className="h-3 w-3 mr-1" /> Generer flere</Button>
+                  <Button size="sm" variant="outline" onClick={openBulkForm}><Layers className="h-3 w-3 mr-1" /> Generer flere</Button>
                 </div>
               </div>
             )}
@@ -342,7 +342,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                 </div>
                 <p className="text-xs text-muted-foreground">Opprett f.eks. 48 switchporter (GigabitEthernet0/1 – GigabitEthernet0/48)</p>
                 <div className="grid grid-cols-5 gap-3">
-                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Prefiks</label><Input value={bulkForm.prefix} onChange={e => setBulkForm({ ...bulkForm, prefix: e.target.value })} placeholder="GigabitEthernet0/" className="bg-secondary border-border h-9 text-xs" /></div>
+                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Prefiks</label><Input value={bulkForm.prefix} onChange={e => { const prefix = e.target.value; setBulkForm({ ...bulkForm, prefix, start: getNextStart(prefix) }); }} placeholder="GigabitEthernet0/" className="bg-secondary border-border h-9 text-xs" /></div>
                   <div><label className="text-[10px] text-muted-foreground block mb-0.5">Start-nr</label><Input type="number" value={bulkForm.start} onChange={e => setBulkForm({ ...bulkForm, start: Number(e.target.value) })} className="bg-secondary border-border h-9 text-xs" /></div>
                   <div><label className="text-[10px] text-muted-foreground block mb-0.5">Antall</label><Input type="number" value={bulkForm.count} onChange={e => setBulkForm({ ...bulkForm, count: Number(e.target.value) })} className="bg-secondary border-border h-9 text-xs" /></div>
                   <div><label className="text-[10px] text-muted-foreground block mb-0.5">Type</label><select value={bulkForm.type} onChange={e => setBulkForm({ ...bulkForm, type: e.target.value as any })} className={selectClass}>{ifaceTypes.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
