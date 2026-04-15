@@ -143,7 +143,10 @@ export interface FirewallRule {
 
 export type FirewallZone = "WAN" | "LAN" | "DMZ" | "WLAN" | "VPN" | "MGMT" | "IOT" | "GUEST";
 
-export type NetworkZone = "LAN" | "WAN" | "DMZ" | "GUEST" | "IOT" | "WLAN" | "VPN" | "MGMT" | "VLAN-only";
+export interface NetworkZone {
+  id: string;
+  name: string;
+}
 
 export interface NetworkInfo {
   id: string;
