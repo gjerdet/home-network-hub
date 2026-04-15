@@ -73,36 +73,73 @@ export function NetworkTopology({ devices }: Props) {
       };
     });
 
-    // Build links from cables
+    // Build links from explicit cables and interface-to-interface connections
     const newLinks: TopologyLink[] = [];
-    devices.forEach(d => {
-      (d.cables || []).forEach(cable => {
-        if (cable.remoteDevice) {
-          // Check if remote device exists
-          const remoteExists = devices.some(rd => rd.id === cable.remoteDevice || rd.name === cable.remoteDevice);
-          if (remoteExists) {
-            // Avoid duplicate links
-            const remoteId = devices.find(rd => rd.id === cable.remoteDevice || rd.name === cable.remoteDevice)?.id;
-            if (remoteId && !newLinks.some(l => 
-              (l.from === d.id && l.to === remoteId && l.fromPort === cable.localPort) ||
-              (l.from === remoteId && l.to === d.id && l.toPort === cable.localPort)
-            )) {
-              newLinks.push({
-                from: d.id,
-                to: remoteId,
-                fromPort: cable.localPort,
-                toPort: cable.remotePort || "",
-                cableType: cable.type,
-                color: cable.color || "#6b7280",
-                status: cable.status,
-              });
-            }
-          }
-        }
+    const addLink = ({
+      fromId,
+      remoteRef,
+      fromPort,
+      toPort,
+      cableType,
+      color,
+      status,
+    }: {
+      fromId: string;
+      remoteRef?: string;
+      fromPort?: string;
+      toPort?: string;
+      cableType: string;
+      color: string;
+      status: string;
+    }) => {
+      if (!remoteRef) return;
+      const remoteId = devices.find(rd => rd.id === remoteRef || rd.name === remoteRef)?.id;
+      if (!remoteId || remoteId === fromId) return;
+
+      const duplicate = newLinks.some(link =>
+        (link.from === fromId && link.to === remoteId && link.fromPort === (fromPort || "") && link.toPort === (toPort || "")) ||
+        (link.from === remoteId && link.to === fromId && link.fromPort === (toPort || "") && link.toPort === (fromPort || ""))
+      );
+
+      if (duplicate) return;
+
+      newLinks.push({
+        from: fromId,
+        to: remoteId,
+        fromPort: fromPort || "",
+        toPort: toPort || "",
+        cableType,
+        color,
+        status,
+      });
+    };
+
+    devices.forEach(device => {
+      (device.cables || []).forEach(cable => {
+        addLink({
+          fromId: device.id,
+          remoteRef: cable.remoteDevice,
+          fromPort: cable.localPort,
+          toPort: cable.remotePort,
+          cableType: cable.type,
+          color: cable.color || "#6b7280",
+          status: cable.status,
+        });
+      });
+
+      (device.interfaces || []).forEach(iface => {
+        addLink({
+          fromId: device.id,
+          remoteRef: iface.connectedTo,
+          fromPort: iface.name,
+          toPort: iface.connectedToInterface,
+          cableType: "other",
+          color: "#64748b",
+          status: "connected",
+        });
       });
     });
 
-    console.log("[Topology] devices:", devices.length, "nodes:", newNodes.length, "links:", newLinks.length, "cables total:", devices.reduce((s, d) => s + (d.cables?.length || 0), 0));
     setNodes(newNodes);
     setLinks(newLinks);
   }, [devices]);
