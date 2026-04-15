@@ -165,13 +165,16 @@ export default function DevicesPage() {
           <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-3 mt-6">Programvare</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div><label className="text-xs text-muted-foreground mb-1 block">Operativsystem</label>
-              <select value={commonOS.includes(form.os) ? form.os : form.os ? "Annet" : ""} onChange={e => setForm({ ...form, os: e.target.value === "Annet" ? form.os : e.target.value })} className={selectClass}>
-                <option value="">Velg OS...</option>
-                {commonOS.map(os => <option key={os} value={os}>{os}</option>)}
-              </select>
-              {!commonOS.includes(form.os) && form.os !== "" && (
-                <Input value={form.os} onChange={e => setForm({ ...form, os: e.target.value })} placeholder="Egendefinert OS" className="bg-secondary border-border mt-2" />
-              )}
+              <Input
+                list="os-list"
+                value={form.os}
+                onChange={e => setForm({ ...form, os: e.target.value })}
+                placeholder="Skriv eller velg OS..."
+                className="bg-secondary border-border"
+              />
+              <datalist id="os-list">
+                {commonOS.map(os => <option key={os} value={os} />)}
+              </datalist>
             </div>
             <div><label className="text-xs text-muted-foreground mb-1 block">OS-versjon</label><Input value={form.osVersion} onChange={e => setForm({ ...form, osVersion: e.target.value })} placeholder="f.eks. 22.04 LTS" className="bg-secondary border-border" /></div>
             <div><label className="text-xs text-muted-foreground mb-1 block">Firmware</label><Input value={form.firmware} onChange={e => setForm({ ...form, firmware: e.target.value })} className="bg-secondary border-border" /></div>
