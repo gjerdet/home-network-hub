@@ -364,3 +364,22 @@ export const login = (username: string, password: string): User | null => {
 export const logout = () => setCurrentUser(null);
 
 export const generateId = () => crypto.randomUUID();
+
+// Backup
+export const exportBackup = (): string => {
+  const data: Record<string, unknown> = {};
+  for (const [key, storageKey] of Object.entries(KEYS)) {
+    const raw = localStorage.getItem(storageKey);
+    if (raw) data[key] = JSON.parse(raw);
+  }
+  return JSON.stringify(data, null, 2);
+};
+
+export const importBackup = (json: string) => {
+  const data = JSON.parse(json) as Record<string, unknown>;
+  for (const [key, storageKey] of Object.entries(KEYS)) {
+    if (data[key] !== undefined) {
+      localStorage.setItem(storageKey, JSON.stringify(data[key]));
+    }
+  }
+};

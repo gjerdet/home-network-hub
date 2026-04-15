@@ -1,7 +1,9 @@
-import { Monitor, FileText, Flame, Globe, FolderOpen, Users, LogOut, Search } from "lucide-react";
+import { useState, useRef } from "react";
+import { Monitor, FileText, Flame, Globe, FolderOpen, Users, LogOut, Download, Upload } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
-import { logout } from "@/lib/store";
+import { logout, exportBackup, importBackup } from "@/lib/store";
+import { toast } from "sonner";
 import {
   Sidebar,
   SidebarContent,
@@ -27,9 +29,40 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const navigate = useNavigate();
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  const handleExport = () => {
+    const data = exportBackup();
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `netdocs-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Backup eksportert");
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        importBackup(reader.result as string);
+        toast.success("Backup importert – laster på nytt...");
+        setTimeout(() => window.location.reload(), 1000);
+      } catch {
+        toast.error("Ugyldig backup-fil");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
   };
 
   return (
@@ -63,7 +96,22 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <div className="mt-auto p-2">
+        <div className="mt-auto p-2 space-y-1">
+          <input type="file" ref={fileInputRef} accept=".json" onChange={handleImport} className="hidden" />
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-sidebar-foreground hover:bg-secondary transition-colors w-full"
+          >
+            <Download className="h-4 w-4 shrink-0" />
+            {!collapsed && <span>Eksporter backup</span>}
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-sidebar-foreground hover:bg-secondary transition-colors w-full"
+          >
+            <Upload className="h-4 w-4 shrink-0" />
+            {!collapsed && <span>Importer backup</span>}
+          </button>
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-sidebar-foreground hover:bg-destructive/20 hover:text-destructive transition-colors w-full"
