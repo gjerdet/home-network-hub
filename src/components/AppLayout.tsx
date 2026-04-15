@@ -143,6 +143,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,8 +157,44 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     navigate("/login");
   };
 
+  const handleExport = () => {
+    const data = exportBackup();
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `netdocs-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Backup eksportert");
+  };
+
+  const handleImport = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        importBackup(reader.result as string);
+        toast.success("Backup importert – laster på nytt...");
+        setTimeout(() => window.location.reload(), 1000);
+      } catch {
+        toast.error("Ugyldig backup-fil");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+
+  const navGroups = makeNavGroups(handleExport, handleImport);
+
   return (
     <div className="min-h-screen flex flex-col w-full bg-background">
+      <input type="file" ref={fileInputRef} accept=".json" onChange={handleFileChange} className="hidden" />
       {/* NetBox-style navbar */}
       <header className="h-11 flex items-center border-b border-border px-4 gap-2 bg-[hsl(var(--navbar))] shrink-0">
         <div className="flex items-center gap-2 mr-3">
