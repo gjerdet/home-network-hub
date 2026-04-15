@@ -1,5 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { type Device, type DeviceInterface, type DeviceRoute, type DeviceCable, updateDevice, getDevices, getNetworks } from "@/lib/store";
+// Note: DeviceSubData still uses sync store for sub-entity updates (interfaces, routes, cables)
+// These are nested updates on the device object and work fine with localStorage
+// The parent component handles the async loading
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Save, X, Network, Route, Cable, Layers, Edit2, ChevronDown, ChevronRight, Globe, Link2, Zap } from "lucide-react";

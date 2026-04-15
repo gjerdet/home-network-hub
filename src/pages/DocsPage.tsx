@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
-import { getDocs, addDoc, updateDoc, deleteDoc, getDevices, getNetworks, type DocPage, type Device, type NetworkInfo } from "@/lib/store";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { type DocPage, type Device, type NetworkInfo } from "@/lib/store";
+import { getDocsAsync, addDocAsync, updateDocAsync, deleteDocAsync, getDevicesAsync, getNetworksAsync } from "@/lib/data-service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TiptapEditor } from "@/components/TiptapEditor";
@@ -126,9 +127,9 @@ export default function DocsPage() {
   const [showTemplates, setShowTemplates] = useState(false);
 
   useEffect(() => {
-    setDocs(getDocs());
-    setDevices(getDevices());
-    setNetworks(getNetworks());
+    Promise.all([getDocsAsync(), getDevicesAsync(), getNetworksAsync()]).then(([d, dev, n]) => {
+      setDocs(d); setDevices(dev); setNetworks(n);
+    });
   }, []);
 
   const tree = useMemo(() => buildTree(docs), [docs]);
@@ -144,9 +145,9 @@ export default function DocsPage() {
     setExpandedNodes(next);
   };
 
-  const reload = () => setDocs(getDocs());
+  const reload = useCallback(async () => setDocs(await getDocsAsync()), []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.title.trim()) return;
     const tags = form.tags.split(",").map(t => t.trim()).filter(Boolean);
     const payload = {
@@ -159,11 +160,11 @@ export default function DocsPage() {
       linkedNetworks: form.linkedNetworks,
     };
     if (editId) {
-      updateDoc(editId, payload);
+      await updateDocAsync(editId, payload);
     } else {
-      addDoc(payload);
+      await addDocAsync(payload);
     }
-    reload();
+    await reload();
     setShowForm(false);
     setEditId(null);
     setForm({ title: "", content: "", category: "Generelt", tags: "", parentId: "", linkedDevices: [], linkedNetworks: [] });
@@ -183,12 +184,12 @@ export default function DocsPage() {
     setShowForm(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     // Re-parent children to root
     const children = docs.filter(d => d.parentId === id);
-    children.forEach(c => updateDoc(c.id, { parentId: undefined }));
-    deleteDoc(id);
-    reload();
+    for (const c of children) await updateDocAsync(c.id, { parentId: undefined });
+    await deleteDocAsync(id);
+    await reload();
     if (selectedDocId === id) setSelectedDocId(null);
   };
 
@@ -261,12 +262,12 @@ export default function DocsPage() {
           <div className="flex items-center gap-2 mb-2">
             <h2 className="text-sm font-semibold text-foreground flex-1">Dokumentasjon</h2>
             <button onClick={() => startNewDoc()} className="text-primary hover:text-primary/80" title="Nytt dokument"><Plus className="h-4 w-4" /></button>
-            <button onClick={() => {
+            <button onClick={async () => {
               // Create a folder/group page
               const title = window.prompt("Mappenavn:");
               if (title) {
-                addDoc({ title, content: "", category: "Generelt", tags: [] });
-                reload();
+                await addDocAsync({ title, content: "", category: "Generelt", tags: [] });
+                await reload();
               }
             }} className="text-muted-foreground hover:text-primary" title="Ny mappe"><FolderPlus className="h-4 w-4" /></button>
           </div>

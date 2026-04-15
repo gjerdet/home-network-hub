@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
+import { type Firewall, type FirewallRule, type Device, saveFirewallRules, getFirewallRules as getFirewallRulesSync } from "@/lib/store";
 import {
-  getFirewalls, addFirewall, deleteFirewall, updateFirewall, type Firewall,
-  getFirewallRules, addFirewallRule, deleteFirewallRule, saveFirewallRules, updateFirewallRule,
-  getNetworks, getDevices, type FirewallRule, type Device,
-} from "@/lib/store";
+  getFirewallsAsync, addFirewallAsync, deleteFirewallAsync, updateFirewallAsync,
+  getFirewallRulesAsync, addFirewallRuleAsync, deleteFirewallRuleAsync, updateFirewallRuleAsync,
+  getNetworksAsync, getDevicesAsync,
+} from "@/lib/data-service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -45,7 +46,7 @@ function FirewallDetail({ fw, onBack }: { fw: Firewall; onBack: () => void }) {
   const [viewMode, setViewMode] = useState<"list" | "matrix">("list");
   const [zoneFilter, setZoneFilter] = useState<string | null>(null);
 
-  const networks = getNetworks();
+  const [networks, setNetworks] = useState<{ name: string }[]>([]);
   const networkZones = networks.map(n => n.name);
   const zones = networkZones.length > 0 ? networkZones : ["LAN", "WAN"];
 
@@ -57,20 +58,20 @@ function FirewallDetail({ fw, onBack }: { fw: Firewall; onBack: () => void }) {
   };
   const [form, setForm] = useState(emptyForm);
 
-  const reload = () => setAllRules(getFirewallRules());
-  useEffect(reload, []);
+  const reload = async () => { const r = await getFirewallRulesAsync(fw.id); setAllRules(r); };
+  useEffect(() => { reload(); getNetworksAsync().then(n => setNetworks(n)); }, []);
 
   const rules = allRules.filter(r => r.firewallId === fw.id);
   const filteredRules = zoneFilter ? rules.filter(r => r.sourceZone === zoneFilter || r.destinationZone === zoneFilter) : rules;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name) return;
     if (editId) {
-      updateFirewallRule(editId, form);
+      await updateFirewallRuleAsync(editId, { ...form, firewallId: fw.id });
     } else {
-      addFirewallRule({ ...form, firewallId: fw.id, order: rules.length, hitCount: 0 });
+      await addFirewallRuleAsync({ ...form, firewallId: fw.id, order: rules.length, hitCount: 0 });
     }
-    reload(); setShowForm(false); setEditId(null); setForm(emptyForm);
+    await reload(); setShowForm(false); setEditId(null); setForm(emptyForm);
   };
 
   const handleEdit = (r: FirewallRule) => {
@@ -84,22 +85,25 @@ function FirewallDetail({ fw, onBack }: { fw: Firewall; onBack: () => void }) {
     setEditId(r.id); setShowForm(true); setExpandedRule(null);
   };
 
-  const handleDelete = (id: string) => { deleteFirewallRule(id); reload(); if (expandedRule === id) setExpandedRule(null); };
+  const handleDelete = async (id: string) => { await deleteFirewallRuleAsync(id, fw.id); await reload(); if (expandedRule === id) setExpandedRule(null); };
 
-  const toggleEnabled = (id: string) => {
-    const updated = allRules.map(r => r.id === id ? { ...r, enabled: !r.enabled } : r);
-    saveFirewallRules(updated); setAllRules(updated);
+  const toggleEnabled = async (id: string) => {
+    const rule = allRules.find(r => r.id === id);
+    if (rule) {
+      await updateFirewallRuleAsync(id, { ...rule, enabled: !rule.enabled, firewallId: fw.id });
+      await reload();
+    }
   };
 
-  const moveRule = (id: string, dir: -1 | 1) => {
+  const moveRule = async (id: string, dir: -1 | 1) => {
     const fwRules = [...rules];
     const idx = fwRules.findIndex(r => r.id === id);
     if ((dir === -1 && idx === 0) || (dir === 1 && idx === fwRules.length - 1)) return;
     [fwRules[idx], fwRules[idx + dir]] = [fwRules[idx + dir], fwRules[idx]];
-    fwRules.forEach((r, i) => r.order = i);
-    const otherRules = allRules.filter(r => r.firewallId !== fw.id);
-    saveFirewallRules([...otherRules, ...fwRules]);
-    setAllRules([...otherRules, ...fwRules]);
+    for (let i = 0; i < fwRules.length; i++) {
+      await updateFirewallRuleAsync(fwRules[i].id, { ...fwRules[i], order: i, firewallId: fw.id });
+    }
+    await reload();
   };
 
   const usedZones = [...new Set(rules.flatMap(r => [r.sourceZone, r.destinationZone]))].sort();
@@ -341,17 +345,20 @@ export default function FirewallPage() {
   const emptyForm = { name: "", manufacturer: "", model: "", ip: "", os: "", description: "", status: "online" as Firewall["status"] };
   const [form, setForm] = useState(emptyForm);
 
-  const reload = () => { setFirewalls(getFirewalls()); setAllRules(getFirewallRules()); setDevices(getDevices()); };
-  useEffect(reload, []);
+  const reload = async () => {
+    const [fw, r, d] = await Promise.all([getFirewallsAsync(), getFirewallRulesAsync(), getDevicesAsync()]);
+    setFirewalls(fw); setAllRules(r); setDevices(d);
+  };
+  useEffect(() => { reload(); }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name) return;
     if (editId) {
-      updateFirewall(editId, form);
+      await updateFirewallAsync(editId, form);
     } else {
-      addFirewall(form);
+      await addFirewallAsync(form);
     }
-    reload(); setShowForm(false); setEditId(null); setForm(emptyForm);
+    await reload(); setShowForm(false); setEditId(null); setForm(emptyForm);
   };
 
   const handleEdit = (fw: Firewall) => {
@@ -362,8 +369,8 @@ export default function FirewallPage() {
     setEditId(fw.id); setShowForm(true);
   };
 
-  const handleDelete = (id: string) => {
-    deleteFirewall(id); reload();
+  const handleDelete = async (id: string) => {
+    await deleteFirewallAsync(id); await reload();
   };
 
   const selectClass = "w-full h-10 rounded-md bg-secondary border border-border px-3 text-sm text-foreground";

@@ -1,17 +1,28 @@
-import { useSearchParams } from "react-router-dom";
-import { getDevices, getDocs, getFirewallRules, getNetworks } from "@/lib/store";
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { getDevicesAsync, getDocsAsync, getFirewallRulesAsync, getNetworksAsync } from "@/lib/data-service";
 import { Monitor, FileText, Flame, Globe } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import type { Device, DocPage, FirewallRule, NetworkInfo } from "@/lib/store";
 
 export default function SearchPage() {
   const [params] = useSearchParams();
   const q = (params.get("q") || "").toLowerCase();
   const navigate = useNavigate();
 
-  const devices = getDevices().filter(d => d.name.toLowerCase().includes(q) || d.ip.includes(q) || d.role.toLowerCase().includes(q));
-  const docs = getDocs().filter(d => d.title.toLowerCase().includes(q) || d.content.toLowerCase().includes(q));
-  const rules = getFirewallRules().filter(r => r.name.toLowerCase().includes(q));
-  const networks = getNetworks().filter(n => n.name.toLowerCase().includes(q) || n.subnet.includes(q));
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [docs, setDocs] = useState<DocPage[]>([]);
+  const [rules, setRules] = useState<FirewallRule[]>([]);
+  const [networks, setNetworks] = useState<NetworkInfo[]>([]);
+
+  useEffect(() => {
+    if (!q) return;
+    Promise.all([getDevicesAsync(), getDocsAsync(), getFirewallRulesAsync(), getNetworksAsync()]).then(([d, doc, r, n]) => {
+      setDevices(d.filter(d => d.name.toLowerCase().includes(q) || d.ip.includes(q) || d.role.toLowerCase().includes(q)));
+      setDocs(doc.filter(d => d.title.toLowerCase().includes(q) || d.content.toLowerCase().includes(q)));
+      setRules(r.filter(r => r.name.toLowerCase().includes(q)));
+      setNetworks(n.filter(n => n.name.toLowerCase().includes(q) || n.subnet.includes(q)));
+    });
+  }, [q]);
 
   const total = devices.length + docs.length + rules.length + networks.length;
 
