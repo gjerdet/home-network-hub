@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { getDevices, addDevice, deleteDevice, updateDevice, type Device, type DeviceType } from "@/lib/store";
+import { getDevices, addDevice, deleteDevice, updateDevice, saveDevices, type Device, type DeviceType } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Edit2, Monitor, Wifi, Server, HardDrive, Shield, Radio, X, Save, Box, Cpu, Zap, Battery, ChevronDown, ChevronRight, ArrowLeft, ExternalLink, Copy, Network, Route, Cable } from "lucide-react";
+import { Plus, Trash2, Edit2, Monitor, Wifi, Server, HardDrive, Shield, Radio, X, Save, Box, Cpu, Zap, Battery, ChevronDown, ChevronRight, ArrowLeft, ExternalLink, Copy, Network, Route, Cable, Share2, List } from "lucide-react";
 import { DeviceSubData } from "@/components/DeviceSubData";
+import { NetworkTopology } from "@/components/NetworkTopology";
 
 const typeIcons: Record<DeviceType, React.ReactNode> = {
   router: <Wifi className="h-4 w-4" />, switch: <Monitor className="h-4 w-4" />, server: <Server className="h-4 w-4" />,
