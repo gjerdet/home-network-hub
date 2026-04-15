@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { type Device, type DeviceInterface, type DeviceRoute, type DeviceCable, updateDevice } from "@/lib/store";
+import { type Device, type DeviceInterface, type DeviceRoute, type DeviceCable, updateDevice, getDevices } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Save, X, Network, Route, Cable, Layers } from "lucide-react";
@@ -19,6 +19,7 @@ interface Props {
 
 export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: Props) {
   const [tab, setTab] = useState<"interfaces" | "routes" | "cables">(initialTab);
+  const allDevices = getDevices().filter(d => d.id !== device.id);
 
   // Interfaces
   const [showIfForm, setShowIfForm] = useState(false);
@@ -83,7 +84,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
   const [cableForm, setCableForm] = useState({ label: "", type: "cat6" as DeviceCable["type"], localPort: "", remoteDevice: "", remotePort: "", length: "", color: "", status: "connected" as DeviceCable["status"] });
 
   const addCable = () => {
-    if (!cableForm.localPort) return;
+    if (!cableForm.localPort || !cableForm.remoteDevice) return;
     const cables = [...(device.cables || []), { id: crypto.randomUUID(), ...cableForm }];
     updateDevice(device.id, { cables: cables });
     onUpdate();
@@ -96,9 +97,22 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
     onUpdate();
   };
 
+  // Helper: resolve device name from ID or name
+  const resolveDeviceName = (ref: string) => {
+    const found = allDevices.find(d => d.id === ref);
+    return found ? found.name : ref;
+  };
+
+  // Get interfaces for selected remote device
+  const getRemoteInterfaces = () => {
+    const remote = allDevices.find(d => d.id === cableForm.remoteDevice);
+    return remote?.interfaces || [];
+  };
+
   const ifaces = device.interfaces || [];
   const routes = device.routes || [];
   const cables = device.cables || [];
+  const localInterfaces = device.interfaces || [];
 
   return (
     <div className="border-t border-border">
@@ -145,7 +159,6 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
               </div>
             )}
 
-            {/* Empty state */}
             {ifaces.length === 0 && !showIfForm && !showBulkForm && (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <Network className="h-10 w-10 text-muted-foreground/40 mb-3" />
@@ -158,7 +171,6 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
               </div>
             )}
 
-            {/* Bulk generate form */}
             {showBulkForm && (
               <div className="bg-background border border-primary/30 rounded-md p-4 space-y-3 mb-3">
                 <div className="flex items-center gap-2 mb-1">
@@ -185,7 +197,6 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
               </div>
             )}
 
-            {/* Single add form */}
             {showIfForm ? (
               <div className="bg-background border border-border rounded-md p-3 space-y-3">
                 <div className="grid grid-cols-3 gap-3">
@@ -266,13 +277,11 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                   <div key={cable.id} className="flex items-center gap-3 bg-background rounded-md border border-border p-3 text-xs">
                     {cable.color && <div className="w-3 h-3 rounded-full border border-border" style={{ backgroundColor: cable.color }} />}
                     <span className={`w-2 h-2 rounded-full ${cable.status === "connected" ? "bg-success" : cable.status === "planned" ? "bg-info" : "bg-destructive"}`} />
-                    <span className="font-mono font-medium text-foreground">{cable.localPort}</span>
-                    {(cable.remoteDevice || cable.remotePort) && (
-                      <>
-                        <span className="text-muted-foreground">→</span>
-                        <span className="text-foreground">{cable.remoteDevice}{cable.remotePort ? `:${cable.remotePort}` : ""}</span>
-                      </>
-                    )}
+                    <span className="font-medium text-foreground">{device.name}</span>
+                    <span className="font-mono text-muted-foreground">{cable.localPort}</span>
+                    <span className="text-muted-foreground">→</span>
+                    <span className="font-medium text-foreground">{resolveDeviceName(cable.remoteDevice)}</span>
+                    {cable.remotePort && <span className="font-mono text-muted-foreground">{cable.remotePort}</span>}
                     <span className="bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">{cableTypeLabels[cable.type]}</span>
                     {cable.length && <span className="text-muted-foreground">{cable.length}</span>}
                     {cable.label && <span className="text-muted-foreground italic">{cable.label}</span>}
@@ -286,25 +295,69 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <Cable className="h-10 w-10 text-muted-foreground/40 mb-3" />
                 <p className="text-sm text-muted-foreground mb-1">Ingen kabler registrert</p>
-                <p className="text-xs text-muted-foreground/70 mb-4">Dokumenter fysiske kabelkoblinger mellom enheter.</p>
+                <p className="text-xs text-muted-foreground/70 mb-4">Koble denne enheten til andre enheter med kabler.</p>
                 <Button size="sm" onClick={() => setShowCableForm(true)}><Plus className="h-3 w-3 mr-1" /> Legg til kabel</Button>
               </div>
             )}
             {showCableForm ? (
               <div className="bg-background border border-border rounded-md p-3 space-y-3">
+                <p className="text-xs font-medium text-foreground mb-2">
+                  Fra: <span className="text-primary">{device.name}</span> → Til:
+                </p>
                 <div className="grid grid-cols-3 gap-3">
-                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Lokal port *</label><Input value={cableForm.localPort} onChange={e => setCableForm({ ...cableForm, localPort: e.target.value })} placeholder="eth0, port 1" className="bg-secondary border-border h-9 text-xs" /></div>
-                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Type</label><select value={cableForm.type} onChange={e => setCableForm({ ...cableForm, type: e.target.value as any })} className={selectClass}>{cableTypes.map(t => <option key={t} value={t}>{cableTypeLabels[t]}</option>)}</select></div>
-                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Status</label><select value={cableForm.status} onChange={e => setCableForm({ ...cableForm, status: e.target.value as any })} className={selectClass}>{Object.entries(cableStatusLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
-                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Ekstern enhet</label><Input value={cableForm.remoteDevice} onChange={e => setCableForm({ ...cableForm, remoteDevice: e.target.value })} className="bg-secondary border-border h-9 text-xs" /></div>
-                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Ekstern port</label><Input value={cableForm.remotePort} onChange={e => setCableForm({ ...cableForm, remotePort: e.target.value })} className="bg-secondary border-border h-9 text-xs" /></div>
-                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Lengde</label><Input value={cableForm.length} onChange={e => setCableForm({ ...cableForm, length: e.target.value })} placeholder="2m" className="bg-secondary border-border h-9 text-xs" /></div>
-                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Farge</label><Input type="color" value={cableForm.color || "#3b82f6"} onChange={e => setCableForm({ ...cableForm, color: e.target.value })} className="bg-secondary border-border h-9 p-1" /></div>
-                  <div className="col-span-2"><label className="text-[10px] text-muted-foreground block mb-0.5">Merkelapp</label><Input value={cableForm.label} onChange={e => setCableForm({ ...cableForm, label: e.target.value })} className="bg-secondary border-border h-9 text-xs" /></div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-0.5">Lokal port *</label>
+                    {localInterfaces.length > 0 ? (
+                      <select value={cableForm.localPort} onChange={e => setCableForm({ ...cableForm, localPort: e.target.value })} className={selectClass}>
+                        <option value="">Velg port...</option>
+                        {localInterfaces.map(i => <option key={i.id} value={i.name}>{i.name} {i.ip ? `(${i.ip})` : ""}</option>)}
+                      </select>
+                    ) : (
+                      <Input value={cableForm.localPort} onChange={e => setCableForm({ ...cableForm, localPort: e.target.value })} placeholder="eth0" className="bg-secondary border-border h-9 text-xs" />
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-0.5">Til enhet *</label>
+                    <select value={cableForm.remoteDevice} onChange={e => setCableForm({ ...cableForm, remoteDevice: e.target.value, remotePort: "" })} className={selectClass}>
+                      <option value="">Velg enhet...</option>
+                      {allDevices.map(d => <option key={d.id} value={d.id}>{d.name} ({d.ip})</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-0.5">Ekstern port</label>
+                    {getRemoteInterfaces().length > 0 ? (
+                      <select value={cableForm.remotePort} onChange={e => setCableForm({ ...cableForm, remotePort: e.target.value })} className={selectClass}>
+                        <option value="">Velg port...</option>
+                        {getRemoteInterfaces().map(i => <option key={i.id} value={i.name}>{i.name} {i.ip ? `(${i.ip})` : ""}</option>)}
+                      </select>
+                    ) : (
+                      <Input value={cableForm.remotePort} onChange={e => setCableForm({ ...cableForm, remotePort: e.target.value })} placeholder="eth0" className="bg-secondary border-border h-9 text-xs" />
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-0.5">Kabeltype</label>
+                    <select value={cableForm.type} onChange={e => setCableForm({ ...cableForm, type: e.target.value as any })} className={selectClass}>{cableTypes.map(t => <option key={t} value={t}>{cableTypeLabels[t]}</option>)}</select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-0.5">Status</label>
+                    <select value={cableForm.status} onChange={e => setCableForm({ ...cableForm, status: e.target.value as any })} className={selectClass}>{Object.entries(cableStatusLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-0.5">Lengde</label>
+                    <Input value={cableForm.length} onChange={e => setCableForm({ ...cableForm, length: e.target.value })} placeholder="2m" className="bg-secondary border-border h-9 text-xs" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-0.5">Farge</label>
+                    <Input type="color" value={cableForm.color || "#3b82f6"} onChange={e => setCableForm({ ...cableForm, color: e.target.value })} className="bg-secondary border-border h-9 p-1" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-[10px] text-muted-foreground block mb-0.5">Merkelapp</label>
+                    <Input value={cableForm.label} onChange={e => setCableForm({ ...cableForm, label: e.target.value })} className="bg-secondary border-border h-9 text-xs" />
+                  </div>
                 </div>
                 <div className="flex gap-2 justify-end">
                   <Button variant="ghost" size="sm" onClick={() => setShowCableForm(false)}>Avbryt</Button>
-                  <Button size="sm" onClick={addCable}><Save className="h-3 w-3 mr-1" /> Lagre</Button>
+                  <Button size="sm" onClick={addCable} disabled={!cableForm.localPort || !cableForm.remoteDevice}><Save className="h-3 w-3 mr-1" /> Lagre</Button>
                 </div>
               </div>
             ) : cables.length > 0 && (
