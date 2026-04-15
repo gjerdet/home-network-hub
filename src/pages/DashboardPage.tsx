@@ -1,8 +1,12 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Responsive, WidthProvider, type LayoutItem } from "react-grid-layout";
+import ReactGridLayout from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
+import type { LayoutItem } from "react-grid-layout";
+
+const Responsive = ReactGridLayout.Responsive;
+const WidthProvider = ReactGridLayout.WidthProvider;
 import {
   Monitor, Globe, Flame, FileText, Server, Shield, Wifi,
   HardDrive, Activity, AlertTriangle, CheckCircle2, Clock,
