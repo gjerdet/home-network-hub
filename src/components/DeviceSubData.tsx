@@ -2,7 +2,7 @@ import { useState } from "react";
 import { type Device, type DeviceInterface, type DeviceRoute, type DeviceCable, updateDevice, getDevices, getNetworks } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Save, X, Network, Route, Cable, Layers, Edit2, ChevronDown, ChevronRight, Globe, Link2 } from "lucide-react";
+import { Plus, Trash2, Save, X, Network, Route, Cable, Layers, Edit2, ChevronDown, ChevronRight, Globe, Link2, Zap } from "lucide-react";
 
 const ifaceTypes = ["ethernet", "wifi", "vlan", "bridge", "bond", "loopback", "tunnel", "lag", "other"] as const;
 const ifaceModes = ["access", "trunk", "hybrid", "routed"] as const;
@@ -308,6 +308,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                       {iface.speed && <span className="bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">{iface.speed}</span>}
                       {iface.mode && <span className="bg-accent px-1.5 py-0.5 rounded text-accent-foreground text-[10px]">{ifaceModeLabels[iface.mode] || iface.mode}</span>}
                       {iface.isWan && <span className="bg-warning/20 text-warning px-1.5 py-0.5 rounded text-[10px] font-semibold flex items-center gap-0.5"><Globe className="h-2.5 w-2.5" /> WAN</span>}
+                      {iface.poe && iface.poe !== "none" && <span className="bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded text-[10px] font-semibold"><Zap className="h-2.5 w-2.5 inline mr-0.5" />{iface.poe.toUpperCase()}</span>}
                       {iface.type === "lag" && <span className="bg-primary/20 text-primary px-1.5 py-0.5 rounded text-[10px] font-semibold flex items-center gap-0.5"><Link2 className="h-2.5 w-2.5" /> LAG</span>}
                       {iface.lagGroup && <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[10px]">→ {iface.lagGroup}</span>}
                       {iface.lagMembers && iface.lagMembers.length > 0 && <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[10px]">{iface.lagMembers.length} medlemmer</span>}
@@ -354,17 +355,26 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                             )}
                           </div>
                         </div>
-                        {/* WAN + LAG */}
-                        <div className="grid grid-cols-2 gap-3">
+                        {/* WAN + PoE + LAG */}
+                        <div className="grid grid-cols-3 gap-3">
                           <div>
                             <label className="flex items-center gap-2 text-[10px] text-muted-foreground cursor-pointer py-1">
                               <input type="checkbox" checked={editIfForm.isWan || false} onChange={e => setEditIfForm({ ...editIfForm, isWan: e.target.checked })} className="rounded border-border" />
-                              <Globe className="h-3 w-3 text-warning" /> WAN-grensesnitt
+                              <Globe className="h-3 w-3 text-warning" /> WAN
                             </label>
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-muted-foreground block mb-0.5">PoE</label>
+                            <select value={editIfForm.poe || "none"} onChange={e => setEditIfForm({ ...editIfForm, poe: e.target.value as any })} className={selectClass}>
+                              <option value="none">Ingen</option>
+                              <option value="poe">PoE (15.4W)</option>
+                              <option value="poe+">PoE+ (30W)</option>
+                              <option value="poe++">PoE++ (60W+)</option>
+                            </select>
                           </div>
                           {editIfForm.type !== "lag" && (
                             <div>
-                              <label className="text-[10px] text-muted-foreground block mb-0.5">LAG-gruppe (medlem av)</label>
+                              <label className="text-[10px] text-muted-foreground block mb-0.5">LAG-gruppe</label>
                               <select value={editIfForm.lagGroup || ""} onChange={e => setEditIfForm({ ...editIfForm, lagGroup: e.target.value })} className={selectClass}>
                                 <option value="">Ingen</option>
                                 {ifaces.filter(i => i.type === "lag" && i.id !== editingIfaceId).map(i => (
@@ -535,11 +545,20 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                   </div>
                 </div>
                 {/* WAN + LAG */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <label className="flex items-center gap-2 text-[10px] text-muted-foreground cursor-pointer py-1">
                     <input type="checkbox" checked={(ifForm as any).isWan || false} onChange={e => setIfForm({ ...ifForm, isWan: e.target.checked } as any)} className="rounded border-border" />
                     <Globe className="h-3 w-3 text-warning" /> WAN-grensesnitt
                   </label>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-0.5">PoE</label>
+                    <select value={(ifForm as any).poe || "none"} onChange={e => setIfForm({ ...ifForm, poe: e.target.value as any } as any)} className={selectClass}>
+                      <option value="none">Ingen</option>
+                      <option value="poe">PoE (15.4W)</option>
+                      <option value="poe+">PoE+ (30W)</option>
+                      <option value="poe++">PoE++ (60W+)</option>
+                    </select>
+                  </div>
                 </div>
                 {/* Connected device + interface */}
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold">Tilkobling</p>
