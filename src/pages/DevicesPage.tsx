@@ -250,8 +250,12 @@ function DeviceDetail({ device, onBack, onEdit, onDelete, onUpdate }: {
         </div>
       )}
 
-      {detailTab !== "info" && (
-        <DeviceSubData device={device} onUpdate={onUpdate} initialTab={detailTab} />
+      {detailTab === "ssids" && isAP && (
+        <SSIDManager device={device} onUpdate={onUpdate} networks={networks} />
+      )}
+
+      {detailTab !== "info" && detailTab !== "ssids" && (
+        <DeviceSubData device={device} onUpdate={onUpdate} initialTab={detailTab as "interfaces" | "routes" | "cables"} />
       )}
     </div>
   );
