@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { getNetworks, addNetwork, deleteNetwork, updateNetwork, getFirewalls, type NetworkInfo, type Firewall, type NetworkZone } from "@/lib/store";
+import { getNetworks, addNetwork, deleteNetwork, updateNetwork, getFirewalls, getZones, addZone, deleteZone, type NetworkInfo, type Firewall, type NetworkZone } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, X, Save, Globe, Edit2, Server, Shield, Info } from "lucide-react";
@@ -62,18 +62,21 @@ function calcSubnetInfo(subnetStr: string) {
   };
 }
 
-const networkZones: NetworkZone[] = ["LAN", "WAN", "DMZ", "GUEST", "IOT", "WLAN", "VPN", "MGMT", "VLAN-only"];
+
 
 const emptyForm = { name: "", networkAddress: "", prefix: "/24", vlan: "", zone: "" as string, gateway: "", dhcpStart: "", dhcpEnd: "", dns1: "", dns2: "", domain: "", description: "", firewallId: "" };
 
 export default function NetworksPage() {
   const [networks, setNetworks] = useState<NetworkInfo[]>([]);
   const [firewalls, setFirewalls] = useState<Firewall[]>([]);
+  const [zones, setZones] = useState<NetworkZone[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [newZoneName, setNewZoneName] = useState("");
+  const [showZoneManager, setShowZoneManager] = useState(false);
 
-  useEffect(() => { setNetworks(getNetworks()); setFirewalls(getFirewalls()); }, []);
+  useEffect(() => { setNetworks(getNetworks()); setFirewalls(getFirewalls()); setZones(getZones()); }, []);
 
   // Calculate subnet info from networkAddress + prefix
   const subnetInfo = useMemo(() => {
@@ -109,7 +112,7 @@ export default function NetworksPage() {
       name: form.name,
       subnet,
       vlan: form.vlan || undefined,
-      zone: (form.zone as NetworkZone) || undefined,
+      zone: form.zone || undefined,
       gateway: form.gateway || undefined,
       dhcpRange: dhcpRange || undefined,
       dns1: form.dns1 || undefined,
@@ -183,10 +186,13 @@ export default function NetworksPage() {
             </div>
             <div><label className="text-xs text-muted-foreground mb-1 block">VLAN</label><Input value={form.vlan} onChange={e => setForm({ ...form, vlan: e.target.value })} className="bg-secondary border-border" placeholder="10" /></div>
             <div><label className="text-xs text-muted-foreground mb-1 block">Sone</label>
-              <select value={form.zone} onChange={e => setForm({ ...form, zone: e.target.value })} className={selectClass}>
-                <option value="">Ingen</option>
-                {networkZones.map(z => <option key={z} value={z}>{z}</option>)}
-              </select>
+              <div className="flex gap-1">
+                <select value={form.zone} onChange={e => setForm({ ...form, zone: e.target.value })} className={selectClass + " flex-1"}>
+                  <option value="">Ingen</option>
+                  {zones.map(z => <option key={z.id} value={z.name}>{z.name}</option>)}
+                </select>
+                <button type="button" onClick={() => setShowZoneManager(!showZoneManager)} className="px-2 rounded-md border border-border bg-secondary text-muted-foreground hover:text-foreground text-xs" title="Administrer soner">⚙</button>
+              </div>
             </div>
           </div>
 
