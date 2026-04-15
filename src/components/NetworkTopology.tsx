@@ -133,7 +133,7 @@ export function NetworkTopology({ devices }: Props) {
       ctx.beginPath();
       ctx.moveTo(from.x, from.y);
       ctx.lineTo(to.x, to.y);
-      ctx.strokeStyle = link.status === "broken" ? "#ef4444" : link.status === "planned" ? "#6366f1" : link.color;
+      ctx.strokeStyle = link.status === "broken" ? "#ef4444" : link.status === "planned" ? "#6366f1" : (link.color || "#94a3b8");
       ctx.lineWidth = link.status === "broken" ? 1 : 2;
       if (link.status === "planned") {
         ctx.setLineDash([6, 4]);
