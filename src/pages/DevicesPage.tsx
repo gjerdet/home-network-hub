@@ -50,7 +50,7 @@ const typeLabels: Record<DeviceType, string> = {
   firewall: "Brannmur", vm: "Virtuell maskin", container: "Container", pdu: "PDU", ups: "UPS", other: "Annet"
 };
 
-const commonOS = ["pfSense", "OPNsense", "Ubuntu Server", "Debian", "CentOS", "Rocky Linux", "Windows Server", "Proxmox VE", "ESXi", "TrueNAS", "UniFi OS", "RouterOS", "Cisco IOS", "Annet"];
+const commonOS = ["pfSense", "OPNsense", "Ubuntu Server", "Ubuntu Desktop", "Debian", "CentOS", "Rocky Linux", "AlmaLinux", "Fedora Server", "Arch Linux", "Alpine Linux", "FreeBSD", "OpenBSD", "Windows Server", "Windows 10", "Windows 11", "Proxmox VE", "ESXi", "Hyper-V", "TrueNAS CORE", "TrueNAS SCALE", "UniFi OS", "RouterOS (MikroTik)", "Cisco IOS", "Cisco IOS-XE", "Junos OS", "Aruba OS", "FortiOS", "SonicOS", "DD-WRT", "OpenWrt", "VyOS", "Synology DSM", "QNAP QTS", "Home Assistant OS", "Docker", "Kubernetes"];
 
 const emptyDevice = {
   name: "", ip: "", mac: "", type: "router" as DeviceType, role: "", status: "online" as Device["status"],
