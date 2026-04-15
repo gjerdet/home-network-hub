@@ -403,6 +403,7 @@ export default function DevicesPage() {
           </div>
 
 
+          <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-3 mt-6">Programvare</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div><label className="text-xs text-muted-foreground mb-1 block">Operativsystem</label>
               <Input list="os-list" value={form.os} onChange={e => setForm({ ...form, os: e.target.value })} placeholder="Skriv eller velg OS..." className="bg-secondary border-border" />
