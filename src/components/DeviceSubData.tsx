@@ -139,8 +139,36 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
 
   const addCable = () => {
     if (!cableForm.localPort || !cableForm.remoteDevice) return;
-    const cables = [...(device.cables || []), { id: crypto.randomUUID(), ...cableForm }];
-    updateDevice(device.id, { cables: cables });
+    // Add cable to this device
+    const cableId = crypto.randomUUID();
+    const cables = [...(device.cables || []), { id: cableId, ...cableForm }];
+    updateDevice(device.id, { cables });
+
+    // Auto-create reverse cable on remote device
+    if (cableForm.remoteDevice && cableForm.remotePort) {
+      const remoteDevice = getDevices().find(d => d.id === cableForm.remoteDevice);
+      if (remoteDevice) {
+        const reverseCable: DeviceCable = {
+          id: crypto.randomUUID(),
+          label: cableForm.label,
+          type: cableForm.type,
+          localPort: cableForm.remotePort,
+          remoteDevice: device.id,
+          remotePort: cableForm.localPort,
+          length: cableForm.length,
+          color: cableForm.color,
+          status: cableForm.status,
+        };
+        // Only add if not already linked
+        const alreadyLinked = (remoteDevice.cables || []).some(c =>
+          c.localPort === reverseCable.localPort && c.remoteDevice === device.id && c.remotePort === cableForm.localPort
+        );
+        if (!alreadyLinked) {
+          updateDevice(cableForm.remoteDevice, { cables: [...(remoteDevice.cables || []), reverseCable] });
+        }
+      }
+    }
+
     onUpdate();
     setShowCableForm(false);
     setCableForm({ label: "", type: "cat6", localPort: "", remoteDevice: "", remotePort: "", length: "", color: "", status: "connected" });
