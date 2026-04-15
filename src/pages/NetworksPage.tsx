@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { getNetworks, addNetwork, deleteNetwork, updateNetwork, getFirewalls, type NetworkInfo, type Firewall } from "@/lib/store";
+import { getNetworks, addNetwork, deleteNetwork, updateNetwork, getFirewalls, type NetworkInfo, type Firewall, type NetworkZone } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, X, Save, Globe, Edit2, Server, Shield, Info } from "lucide-react";
@@ -62,7 +62,9 @@ function calcSubnetInfo(subnetStr: string) {
   };
 }
 
-const emptyForm = { name: "", networkAddress: "", prefix: "/24", vlan: "", gateway: "", dhcpStart: "", dhcpEnd: "", dns1: "", dns2: "", domain: "", description: "", firewallId: "" };
+const networkZones: NetworkZone[] = ["LAN", "WAN", "DMZ", "GUEST", "IOT", "WLAN", "VPN", "MGMT", "VLAN-only"];
+
+const emptyForm = { name: "", networkAddress: "", prefix: "/24", vlan: "", zone: "" as string, gateway: "", dhcpStart: "", dhcpEnd: "", dns1: "", dns2: "", domain: "", description: "", firewallId: "" };
 
 export default function NetworksPage() {
   const [networks, setNetworks] = useState<NetworkInfo[]>([]);
@@ -107,6 +109,7 @@ export default function NetworksPage() {
       name: form.name,
       subnet,
       vlan: form.vlan || undefined,
+      zone: (form.zone as NetworkZone) || undefined,
       gateway: form.gateway || undefined,
       dhcpRange: dhcpRange || undefined,
       dns1: form.dns1 || undefined,
@@ -137,6 +140,7 @@ export default function NetworksPage() {
     const dhcpEnd = dhcpParts[1] || "";
     setForm({
       name: n.name, networkAddress, prefix, vlan: n.vlan || "",
+      zone: n.zone || "",
       gateway: n.gateway || "", dhcpStart, dhcpEnd,
       dns1: n.dns1 || "", dns2: n.dns2 || "",
       domain: n.domain || "", description: n.description || "",
@@ -167,7 +171,7 @@ export default function NetworksPage() {
 
           {/* Basic info */}
           <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-2">Grunnleggende</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
             <div><label className="text-xs text-muted-foreground mb-1 block">Navn *</label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="bg-secondary border-border" placeholder="LAN" /></div>
             <div><label className="text-xs text-muted-foreground mb-1 block">Nettverksadresse *</label><Input value={form.networkAddress} onChange={e => handleSubnetChange(e.target.value, form.prefix)} className="bg-secondary border-border" placeholder="192.168.1.0" /></div>
             <div><label className="text-xs text-muted-foreground mb-1 block">Subnettmaske</label>
@@ -178,6 +182,12 @@ export default function NetworksPage() {
               </select>
             </div>
             <div><label className="text-xs text-muted-foreground mb-1 block">VLAN</label><Input value={form.vlan} onChange={e => setForm({ ...form, vlan: e.target.value })} className="bg-secondary border-border" placeholder="10" /></div>
+            <div><label className="text-xs text-muted-foreground mb-1 block">Sone</label>
+              <select value={form.zone} onChange={e => setForm({ ...form, zone: e.target.value })} className={selectClass}>
+                <option value="">Ingen</option>
+                {networkZones.map(z => <option key={z} value={z}>{z}</option>)}
+              </select>
+            </div>
           </div>
 
           {/* Calculated subnet info */}
@@ -244,6 +254,7 @@ export default function NetworksPage() {
                 {info && <div className="flex justify-between"><span className="text-muted-foreground">Maske</span><span className="font-mono text-foreground">{info.mask}</span></div>}
                 {info && <div className="flex justify-between"><span className="text-muted-foreground">Brukbart</span><span className="font-mono text-foreground text-xs">{info.firstHost} – {info.lastHost} ({info.totalHosts})</span></div>}
                 {n.vlan && <div className="flex justify-between"><span className="text-muted-foreground">VLAN</span><span className="font-mono text-foreground">{n.vlan}</span></div>}
+                {n.zone && <div className="flex justify-between"><span className="text-muted-foreground">Sone</span><span className="text-foreground font-semibold">{n.zone}</span></div>}
                 {n.gateway && <div className="flex justify-between"><span className="text-muted-foreground">Gateway</span><span className="font-mono text-foreground">{n.gateway}</span></div>}
                 {n.dhcpRange && <div className="flex justify-between"><span className="text-muted-foreground">DHCP</span><span className="font-mono text-foreground">{n.dhcpRange}</span></div>}
                 {n.domain && <div className="flex justify-between"><span className="text-muted-foreground">Domene</span><span className="font-mono text-foreground">{n.domain}</span></div>}
