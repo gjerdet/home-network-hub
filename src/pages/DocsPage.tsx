@@ -72,6 +72,46 @@ function buildTree(docs: DocPage[]): TreeNode[] {
   return roots;
 }
 
+// Component for rendering doc content with copy buttons on code blocks
+function DocContent({ html }: { html: string }) {
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+
+  const handleCopy = (code: string, idx: number) => {
+    navigator.clipboard.writeText(code);
+    setCopiedIdx(idx);
+    setTimeout(() => setCopiedIdx(null), 2000);
+  };
+
+  // Split HTML by <pre> blocks to add copy buttons
+  const parts = html.split(/(<pre[\s\S]*?<\/pre>)/g);
+
+  let codeIdx = 0;
+  return (
+    <div className="prose prose-invert max-w-none text-sm [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-3 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-5 [&_h2]:mb-2 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2 [&_p]:mb-2 [&_p]:text-secondary-foreground [&_ul]:ml-4 [&_ul]:list-disc [&_ol]:ml-4 [&_ol]:list-decimal [&_li]:text-secondary-foreground [&_li]:mb-1 [&_blockquote]:border-l-2 [&_blockquote]:border-primary/40 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground [&_code]:bg-secondary [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-primary [&_code]:text-xs [&_pre]:bg-secondary/50 [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:border [&_pre]:border-border [&_pre]:overflow-x-auto [&_a]:text-primary [&_a]:underline [&_hr]:border-border [&_hr]:my-4 [&_strong]:text-foreground">
+      {parts.map((part, i) => {
+        if (part.startsWith("<pre")) {
+          const idx = codeIdx++;
+          // Extract text content from code block
+          const textContent = part.replace(/<[^>]+>/g, "");
+          return (
+            <div key={i} className="relative group">
+              <button
+                onClick={() => handleCopy(textContent, idx)}
+                className="absolute top-2 right-2 p-1.5 rounded-md bg-background/80 border border-border text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Kopier"
+              >
+                {copiedIdx === idx ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
+              </button>
+              <div dangerouslySetInnerHTML={{ __html: part }} />
+            </div>
+          );
+        }
+        return <div key={i} dangerouslySetInnerHTML={{ __html: part }} />;
+      })}
+    </div>
+  );
+}
+
 export default function DocsPage() {
   const [docs, setDocs] = useState<DocPage[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
