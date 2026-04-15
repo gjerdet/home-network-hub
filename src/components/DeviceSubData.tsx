@@ -204,6 +204,10 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                       {iface.mac && <span className="font-mono text-muted-foreground hidden lg:inline">{iface.mac}</span>}
                       {iface.speed && <span className="bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">{iface.speed}</span>}
                       {iface.mode && <span className="bg-accent px-1.5 py-0.5 rounded text-accent-foreground text-[10px]">{ifaceModeLabels[iface.mode] || iface.mode}</span>}
+                      {iface.isWan && <span className="bg-warning/20 text-warning px-1.5 py-0.5 rounded text-[10px] font-semibold flex items-center gap-0.5"><Globe className="h-2.5 w-2.5" /> WAN</span>}
+                      {iface.type === "lag" && <span className="bg-primary/20 text-primary px-1.5 py-0.5 rounded text-[10px] font-semibold flex items-center gap-0.5"><Link2 className="h-2.5 w-2.5" /> LAG</span>}
+                      {iface.lagGroup && <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[10px]">→ {iface.lagGroup}</span>}
+                      {iface.lagMembers && iface.lagMembers.length > 0 && <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[10px]">{iface.lagMembers.length} medlemmer</span>}
                       {iface.vlanId && <span className="bg-info/15 text-info px-1.5 py-0.5 rounded">VLAN {iface.vlanId}</span>}
                       {iface.taggedVlans && iface.taggedVlans.length > 0 && <span className="bg-warning/15 text-warning px-1.5 py-0.5 rounded text-[10px]">Tagged: {iface.taggedVlans.join(",")}</span>}
                       {iface.connectedTo && (
