@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { getFirewallRules, addFirewallRule, deleteFirewallRule, saveFirewallRules, updateFirewallRule, getNetworks, type FirewallRule, type FirewallZone } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, X, Save, Flame, ArrowUp, ArrowDown, Shield, ShieldOff, ChevronDown, ChevronRight, LayoutGrid, List } from "lucide-react";
+import { Plus, Trash2, X, Save, Flame, ArrowUp, ArrowDown, Shield, ShieldOff, ChevronDown, ChevronRight, LayoutGrid, List, Edit2 } from "lucide-react";
 import { RuleFlowDiagram } from "@/components/RuleFlowDiagram";
 
 const defaultZones: string[] = ["WAN", "LAN", "DMZ", "WLAN", "VPN", "MGMT", "IOT", "GUEST"];
