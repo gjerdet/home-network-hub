@@ -74,7 +74,7 @@ export default function SettingsPage() {
               </Badge>
             )}
             {apiStatus === "connected" && (
-              <Badge className="gap-1 bg-green-600 hover:bg-green-700">
+              <Badge className="gap-1 bg-primary hover:bg-primary/90">
                 <CheckCircle className="h-3 w-3" /> Tilkobla (PostgreSQL)
               </Badge>
             )}
