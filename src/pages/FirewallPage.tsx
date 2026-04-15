@@ -130,8 +130,8 @@ export default function FirewallPage() {
       {showForm && (
         <div className="bg-card border border-border rounded-lg p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Ny brannmurregel</h2>
-            <button onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-foreground"><X className="h-5 w-5" /></button>
+            <h2 className="text-lg font-semibold">{editId ? "Rediger brannmurregel" : "Ny brannmurregel"}</h2>
+            <button onClick={() => { setShowForm(false); setEditId(null); }} className="text-muted-foreground hover:text-foreground"><X className="h-5 w-5" /></button>
           </div>
 
           {/* Zone selection - SonicWall style */}
