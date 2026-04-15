@@ -7,8 +7,17 @@ let useApi: boolean | null = null;
 async function isApiAvailable(): Promise<boolean> {
   if (useApi !== null) return useApi;
   try {
-    const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(2000) });
-    useApi = res.ok;
+    const res = await fetch(`${API_BASE}/health`, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(2000),
+    });
+    const contentType = res.headers.get("content-type") || "";
+    if (!res.ok || !contentType.includes("application/json")) {
+      useApi = false;
+      return useApi;
+    }
+    const data = await res.json().catch(() => null);
+    useApi = data?.status === "ok";
   } catch {
     useApi = false;
   }
