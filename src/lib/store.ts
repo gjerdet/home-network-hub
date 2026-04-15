@@ -92,8 +92,22 @@ export interface DocPage {
   updatedAt: string;
 }
 
+export interface Firewall {
+  id: string;
+  name: string;
+  manufacturer?: string;
+  model?: string;
+  ip?: string;
+  os?: string;
+  description?: string;
+  status: "online" | "offline" | "maintenance";
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface FirewallRule {
   id: string;
+  firewallId: string; // which firewall this rule belongs to
   name: string;
   action: "allow" | "deny" | "reject";
   protocol: string;
@@ -175,6 +189,7 @@ const KEYS = {
   devices: "netdocs_devices",
   docs: "netdocs_docs",
   firewallRules: "netdocs_firewall",
+  firewalls: "netdocs_firewalls",
   networks: "netdocs_networks",
   files: "netdocs_files",
   users: "netdocs_users",
@@ -216,6 +231,26 @@ export const updateDoc = (id: string, updates: Partial<DocPage>) => {
 };
 export const deleteDoc = (id: string) => {
   saveDocs(getDocs().filter(d => d.id !== id));
+};
+
+// Firewalls
+export const getFirewalls = (): Firewall[] => getItem(KEYS.firewalls, []);
+export const saveFirewalls = (f: Firewall[]) => setItem(KEYS.firewalls, f);
+export const addFirewall = (f: Omit<Firewall, "id" | "createdAt" | "updatedAt">) => {
+  const list = getFirewalls();
+  const now = new Date().toISOString();
+  const fw: Firewall = { ...f, id: crypto.randomUUID(), createdAt: now, updatedAt: now };
+  list.push(fw);
+  saveFirewalls(list);
+  return fw;
+};
+export const updateFirewall = (id: string, u: Partial<Firewall>) => {
+  saveFirewalls(getFirewalls().map(f => f.id === id ? { ...f, ...u, updatedAt: new Date().toISOString() } : f));
+};
+export const deleteFirewall = (id: string) => {
+  saveFirewalls(getFirewalls().filter(f => f.id !== id));
+  // Also delete all rules for this firewall
+  saveFirewallRules(getFirewallRules().filter(r => r.firewallId !== id));
 };
 
 // Firewall Rules
