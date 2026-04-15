@@ -2,9 +2,9 @@ import { useState } from "react";
 import { type Device, type DeviceInterface, type DeviceRoute, type DeviceCable, updateDevice, getDevices, getNetworks } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Save, X, Network, Route, Cable, Layers, Edit2, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Trash2, Save, X, Network, Route, Cable, Layers, Edit2, ChevronDown, ChevronRight, Globe, Link2 } from "lucide-react";
 
-const ifaceTypes = ["ethernet", "wifi", "vlan", "bridge", "bond", "loopback", "tunnel", "other"] as const;
+const ifaceTypes = ["ethernet", "wifi", "vlan", "bridge", "bond", "loopback", "tunnel", "lag", "other"] as const;
 const ifaceModes = ["access", "trunk", "hybrid", "routed"] as const;
 const ifaceModeLabels: Record<string, string> = { access: "Access", trunk: "Trunk", hybrid: "Hybrid", routed: "Routed" };
 const ifaceSpeeds = ["10M", "100M", "1G", "2.5G", "5G", "10G", "25G", "40G", "100G"] as const;
@@ -204,6 +204,10 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                       {iface.mac && <span className="font-mono text-muted-foreground hidden lg:inline">{iface.mac}</span>}
                       {iface.speed && <span className="bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">{iface.speed}</span>}
                       {iface.mode && <span className="bg-accent px-1.5 py-0.5 rounded text-accent-foreground text-[10px]">{ifaceModeLabels[iface.mode] || iface.mode}</span>}
+                      {iface.isWan && <span className="bg-warning/20 text-warning px-1.5 py-0.5 rounded text-[10px] font-semibold flex items-center gap-0.5"><Globe className="h-2.5 w-2.5" /> WAN</span>}
+                      {iface.type === "lag" && <span className="bg-primary/20 text-primary px-1.5 py-0.5 rounded text-[10px] font-semibold flex items-center gap-0.5"><Link2 className="h-2.5 w-2.5" /> LAG</span>}
+                      {iface.lagGroup && <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[10px]">→ {iface.lagGroup}</span>}
+                      {iface.lagMembers && iface.lagMembers.length > 0 && <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[10px]">{iface.lagMembers.length} medlemmer</span>}
                       {iface.vlanId && <span className="bg-info/15 text-info px-1.5 py-0.5 rounded">VLAN {iface.vlanId}</span>}
                       {iface.taggedVlans && iface.taggedVlans.length > 0 && <span className="bg-warning/15 text-warning px-1.5 py-0.5 rounded text-[10px]">Tagged: {iface.taggedVlans.join(",")}</span>}
                       {iface.connectedTo && (
@@ -246,6 +250,46 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                               <Input value={editIfForm.vlanId || ""} onChange={e => setEditIfForm({ ...editIfForm, vlanId: e.target.value })} placeholder="VLAN ID" className="bg-secondary border-border h-8 text-xs" />
                             )}
                           </div>
+                        </div>
+                        {/* WAN + LAG */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="flex items-center gap-2 text-[10px] text-muted-foreground cursor-pointer py-1">
+                              <input type="checkbox" checked={editIfForm.isWan || false} onChange={e => setEditIfForm({ ...editIfForm, isWan: e.target.checked })} className="rounded border-border" />
+                              <Globe className="h-3 w-3 text-warning" /> WAN-grensesnitt
+                            </label>
+                          </div>
+                          {editIfForm.type !== "lag" && (
+                            <div>
+                              <label className="text-[10px] text-muted-foreground block mb-0.5">LAG-gruppe (medlem av)</label>
+                              <select value={editIfForm.lagGroup || ""} onChange={e => setEditIfForm({ ...editIfForm, lagGroup: e.target.value })} className={selectClass}>
+                                <option value="">Ingen</option>
+                                {ifaces.filter(i => i.type === "lag" && i.id !== editingIfaceId).map(i => (
+                                  <option key={i.id} value={i.name}>{i.name}</option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                          {editIfForm.type === "lag" && (
+                            <div>
+                              <label className="text-[10px] text-muted-foreground block mb-0.5">LAG-medlemmer</label>
+                              <div className="bg-secondary border border-border rounded-md p-1.5 max-h-24 overflow-y-auto space-y-0.5">
+                                {ifaces.filter(i => i.type === "ethernet" && i.id !== editingIfaceId).map(i => {
+                                  const members = editIfForm.lagMembers || [];
+                                  const isMember = members.includes(i.id);
+                                  return (
+                                    <label key={i.id} className="flex items-center gap-1.5 text-[10px] cursor-pointer hover:bg-background rounded px-1 py-0.5">
+                                      <input type="checkbox" checked={isMember} onChange={e => {
+                                        const next = e.target.checked ? [...members, i.id] : members.filter(m => m !== i.id);
+                                        setEditIfForm({ ...editIfForm, lagMembers: next });
+                                      }} className="rounded border-border" />
+                                      <span className="font-mono text-foreground">{i.name}</span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
                         {/* Tagged VLANs for trunk/hybrid */}
                         {(editIfForm.mode === "trunk" || editIfForm.mode === "hybrid") && availableVlans.length > 0 && (
@@ -386,6 +430,13 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                       <Input value={ifForm.vlanId} onChange={e => setIfForm({ ...ifForm, vlanId: e.target.value })} placeholder="VLAN ID" className="bg-secondary border-border h-9 text-xs" />
                     )}
                   </div>
+                </div>
+                {/* WAN + LAG */}
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="flex items-center gap-2 text-[10px] text-muted-foreground cursor-pointer py-1">
+                    <input type="checkbox" checked={(ifForm as any).isWan || false} onChange={e => setIfForm({ ...ifForm, isWan: e.target.checked } as any)} className="rounded border-border" />
+                    <Globe className="h-3 w-3 text-warning" /> WAN-grensesnitt
+                  </label>
                 </div>
                 {/* Connected device + interface */}
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold">Tilkobling</p>

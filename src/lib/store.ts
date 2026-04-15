@@ -3,7 +3,7 @@
 export interface DeviceInterface {
   id: string;
   name: string; // eth0, ens18, etc
-  type: "ethernet" | "wifi" | "vlan" | "bridge" | "bond" | "loopback" | "tunnel" | "other";
+  type: "ethernet" | "wifi" | "vlan" | "bridge" | "bond" | "loopback" | "tunnel" | "lag" | "other";
   mode?: "access" | "trunk" | "hybrid" | "routed"; // switchport mode
   ip?: string;
   mac?: string;
@@ -14,6 +14,9 @@ export interface DeviceInterface {
   connectedToInterface?: string; // interface name on connected device
   vlanId?: string; // access VLAN or native VLAN
   taggedVlans?: string[]; // trunk tagged VLANs
+  isWan?: boolean; // marks this as a WAN interface
+  lagGroup?: string; // LAG group name this interface belongs to (e.g. "bond0")
+  lagMembers?: string[]; // for LAG interfaces: member interface IDs
 }
 
 export interface DeviceRoute {
