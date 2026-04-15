@@ -63,6 +63,20 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
     onUpdate();
   };
 
+  const startEditIface = (iface: DeviceInterface) => {
+    setEditingIfaceId(iface.id);
+    setEditIfForm({ ...iface });
+  };
+
+  const saveEditIface = () => {
+    if (!editingIfaceId) return;
+    const ifaces = (device.interfaces || []).map(i => i.id === editingIfaceId ? { ...i, ...editIfForm } : i);
+    updateDevice(device.id, { interfaces: ifaces });
+    onUpdate();
+    setEditingIfaceId(null);
+    setEditIfForm({});
+  };
+
   // Routes
   const [showRouteForm, setShowRouteForm] = useState(false);
   const [routeForm, setRouteForm] = useState({ destination: "", gateway: "", metric: undefined as number | undefined, interface: "", description: "" });
