@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { TiptapEditor } from "@/components/TiptapEditor";
 import {
   Plus, FileText, Trash2, Edit2, Save, X, ChevronRight, ChevronDown,
-  FolderOpen, Search, ArrowLeft, Server, Globe, Tag, Clock,
-  FileCode, FileQuestion, Settings, AlertTriangle, BookOpen
+  FolderOpen, Search, Server, Globe, Copy, Check,
+  Settings, AlertTriangle, BookOpen, Clock, Folder, FolderPlus
 } from "lucide-react";
 
 const categories = ["Generelt", "Oppsett", "Konfigurasjon", "Feilsøking", "Prosedyrer"];
@@ -70,6 +70,46 @@ function buildTree(docs: DocPage[]): TreeNode[] {
   };
   sortNodes(roots);
   return roots;
+}
+
+// Component for rendering doc content with copy buttons on code blocks
+function DocContent({ html }: { html: string }) {
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+
+  const handleCopy = (code: string, idx: number) => {
+    navigator.clipboard.writeText(code);
+    setCopiedIdx(idx);
+    setTimeout(() => setCopiedIdx(null), 2000);
+  };
+
+  // Split HTML by <pre> blocks to add copy buttons
+  const parts = html.split(/(<pre[\s\S]*?<\/pre>)/g);
+
+  let codeIdx = 0;
+  return (
+    <div className="prose prose-invert max-w-none text-sm [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-3 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-5 [&_h2]:mb-2 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2 [&_p]:mb-2 [&_p]:text-secondary-foreground [&_ul]:ml-4 [&_ul]:list-disc [&_ol]:ml-4 [&_ol]:list-decimal [&_li]:text-secondary-foreground [&_li]:mb-1 [&_blockquote]:border-l-2 [&_blockquote]:border-primary/40 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground [&_code]:bg-secondary [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-primary [&_code]:text-xs [&_pre]:bg-secondary/50 [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:border [&_pre]:border-border [&_pre]:overflow-x-auto [&_a]:text-primary [&_a]:underline [&_hr]:border-border [&_hr]:my-4 [&_strong]:text-foreground">
+      {parts.map((part, i) => {
+        if (part.startsWith("<pre")) {
+          const idx = codeIdx++;
+          // Extract text content from code block
+          const textContent = part.replace(/<[^>]+>/g, "");
+          return (
+            <div key={i} className="relative group">
+              <button
+                onClick={() => handleCopy(textContent, idx)}
+                className="absolute top-2 right-2 p-1.5 rounded-md bg-background/80 border border-border text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Kopier"
+              >
+                {copiedIdx === idx ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
+              </button>
+              <div dangerouslySetInnerHTML={{ __html: part }} />
+            </div>
+          );
+        }
+        return <div key={i} dangerouslySetInnerHTML={{ __html: part }} />;
+      })}
+    </div>
+  );
 }
 
 export default function DocsPage() {
@@ -189,6 +229,11 @@ export default function DocsPage() {
               {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
             </button>
           ) : (
+            <span className="w-3.5 shrink-0" />
+          )}
+          {hasChildren || !node.doc.content ? (
+            <Folder className="h-3.5 w-3.5 text-warning/70 shrink-0" />
+          ) : (
             <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
           )}
           <span className="truncate flex-1">{node.doc.title}</span>
@@ -215,6 +260,14 @@ export default function DocsPage() {
           <div className="flex items-center gap-2 mb-2">
             <h2 className="text-sm font-semibold text-foreground flex-1">Dokumentasjon</h2>
             <button onClick={() => startNewDoc()} className="text-primary hover:text-primary/80" title="Nytt dokument"><Plus className="h-4 w-4" /></button>
+            <button onClick={() => {
+              // Create a folder/group page
+              const title = window.prompt("Mappenavn:");
+              if (title) {
+                addDoc({ title, content: "", category: "Generelt", tags: [] });
+                reload();
+              }
+            }} className="text-muted-foreground hover:text-primary" title="Ny mappe"><FolderPlus className="h-4 w-4" /></button>
           </div>
           <div className="relative">
             <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -423,11 +476,8 @@ export default function DocsPage() {
               </div>
             )}
 
-            {/* Content */}
-            <div
-              className="prose prose-invert max-w-none text-sm [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-3 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-5 [&_h2]:mb-2 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2 [&_p]:mb-2 [&_p]:text-secondary-foreground [&_ul]:ml-4 [&_ul]:list-disc [&_ol]:ml-4 [&_ol]:list-decimal [&_li]:text-secondary-foreground [&_li]:mb-1 [&_blockquote]:border-l-2 [&_blockquote]:border-primary/40 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground [&_code]:bg-secondary [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-primary [&_code]:text-xs [&_pre]:bg-secondary/50 [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:border [&_pre]:border-border [&_pre]:overflow-x-auto [&_a]:text-primary [&_a]:underline [&_hr]:border-border [&_hr]:my-4 [&_strong]:text-foreground"
-              dangerouslySetInnerHTML={{ __html: selectedDoc.content }}
-            />
+            {/* Content with copy buttons on code blocks */}
+            <DocContent html={selectedDoc.content} />
 
             <div className="flex gap-2 mt-8 pt-4 border-t border-border">
               <Button variant="outline" size="sm" onClick={() => startEdit(selectedDoc)}><Edit2 className="h-3 w-3 mr-1" /> Rediger</Button>
