@@ -59,6 +59,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
     if (!bulkForm.prefix || bulkForm.count < 1) return;
     const existing = device.interfaces || [];
     const newIfaces: DeviceInterface[] = [];
+    // Use the actual start number from the form
     for (let i = 0; i < bulkForm.count; i++) {
       newIfaces.push({
         id: crypto.randomUUID(),
@@ -72,7 +73,27 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
     updateDevice(device.id, { interfaces: [...existing, ...newIfaces] });
     onUpdate();
     setShowBulkForm(false);
-    setBulkForm({ prefix: "eth", start: 0, count: 24, type: "ethernet", speed: "1G" });
+  };
+
+  // Calculate next available start number based on existing interfaces with same prefix
+  const getNextStart = (prefix: string) => {
+    const existing = device.interfaces || [];
+    let maxNum = -1;
+    existing.forEach(iface => {
+      if (iface.name.startsWith(prefix)) {
+        const numPart = iface.name.slice(prefix.length);
+        const num = parseInt(numPart);
+        if (!isNaN(num) && num > maxNum) maxNum = num;
+      }
+    });
+    return maxNum + 1;
+  };
+
+  const openBulkForm = () => {
+    const prefix = bulkForm.prefix || "eth";
+    const nextStart = getNextStart(prefix);
+    setBulkForm(f => ({ ...f, prefix, start: nextStart }));
+    setShowBulkForm(true);
   };
 
   const removeInterface = (id: string) => {
@@ -308,7 +329,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                 <p className="text-xs text-muted-foreground/70 mb-4">Legg til enkeltvis eller generer flere porter på en gang.</p>
                 <div className="flex gap-2">
                   <Button size="sm" onClick={() => setShowIfForm(true)}><Plus className="h-3 w-3 mr-1" /> Enkelt</Button>
-                  <Button size="sm" variant="outline" onClick={() => setShowBulkForm(true)}><Layers className="h-3 w-3 mr-1" /> Generer flere</Button>
+                  <Button size="sm" variant="outline" onClick={openBulkForm}><Layers className="h-3 w-3 mr-1" /> Generer flere</Button>
                 </div>
               </div>
             )}
@@ -321,7 +342,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                 </div>
                 <p className="text-xs text-muted-foreground">Opprett f.eks. 48 switchporter (GigabitEthernet0/1 – GigabitEthernet0/48)</p>
                 <div className="grid grid-cols-5 gap-3">
-                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Prefiks</label><Input value={bulkForm.prefix} onChange={e => setBulkForm({ ...bulkForm, prefix: e.target.value })} placeholder="GigabitEthernet0/" className="bg-secondary border-border h-9 text-xs" /></div>
+                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Prefiks</label><Input value={bulkForm.prefix} onChange={e => { const prefix = e.target.value; setBulkForm({ ...bulkForm, prefix, start: getNextStart(prefix) }); }} placeholder="GigabitEthernet0/" className="bg-secondary border-border h-9 text-xs" /></div>
                   <div><label className="text-[10px] text-muted-foreground block mb-0.5">Start-nr</label><Input type="number" value={bulkForm.start} onChange={e => setBulkForm({ ...bulkForm, start: Number(e.target.value) })} className="bg-secondary border-border h-9 text-xs" /></div>
                   <div><label className="text-[10px] text-muted-foreground block mb-0.5">Antall</label><Input type="number" value={bulkForm.count} onChange={e => setBulkForm({ ...bulkForm, count: Number(e.target.value) })} className="bg-secondary border-border h-9 text-xs" /></div>
                   <div><label className="text-[10px] text-muted-foreground block mb-0.5">Type</label><select value={bulkForm.type} onChange={e => setBulkForm({ ...bulkForm, type: e.target.value as any })} className={selectClass}>{ifaceTypes.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
@@ -398,7 +419,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
             ) : ifaces.length > 0 && !showBulkForm && (
               <div className="flex gap-3 mt-2">
                 <button onClick={() => setShowIfForm(true)} className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"><Plus className="h-3 w-3" /> Legg til enkelt</button>
-                <button onClick={() => setShowBulkForm(true)} className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"><Layers className="h-3 w-3" /> Generer flere</button>
+                <button onClick={openBulkForm} className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"><Layers className="h-3 w-3" /> Generer flere</button>
               </div>
             )}
           </div>
