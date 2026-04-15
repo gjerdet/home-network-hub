@@ -26,8 +26,21 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
   const [showBulkForm, setShowBulkForm] = useState(false);
   const [editingIfaceId, setEditingIfaceId] = useState<string | null>(null);
   const [editIfForm, setEditIfForm] = useState<Partial<DeviceInterface>>({});
-  const [ifForm, setIfForm] = useState({ name: "", type: "ethernet" as DeviceInterface["type"], ip: "", mac: "", speed: "", enabled: true, description: "", connectedTo: "", vlanId: "" });
+  const [ifForm, setIfForm] = useState({ name: "", type: "ethernet" as DeviceInterface["type"], ip: "", mac: "", speed: "", enabled: true, description: "", connectedTo: "", connectedToInterface: "", vlanId: "" });
   const [bulkForm, setBulkForm] = useState({ prefix: "eth", start: 0, count: 24, type: "ethernet" as DeviceInterface["type"], speed: "1G" });
+
+  // Helper: get interfaces for a device by ID
+  const getDeviceInterfaces = (deviceId: string) => {
+    const d = allDevices.find(dev => dev.id === deviceId);
+    return d?.interfaces || [];
+  };
+
+  // Helper: resolve device name from ID
+  const resolveDeviceName = (ref?: string) => {
+    if (!ref) return "";
+    const found = allDevices.find(d => d.id === ref);
+    return found ? found.name : ref;
+  };
 
   const addInterface = () => {
     if (!ifForm.name) return;
@@ -35,7 +48,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
     updateDevice(device.id, { interfaces: ifaces });
     onUpdate();
     setShowIfForm(false);
-    setIfForm({ name: "", type: "ethernet", ip: "", mac: "", speed: "", enabled: true, description: "", connectedTo: "", vlanId: "" });
+    setIfForm({ name: "", type: "ethernet", ip: "", mac: "", speed: "", enabled: true, description: "", connectedTo: "", connectedToInterface: "", vlanId: "" });
   };
 
   const addBulkInterfaces = () => {
@@ -49,7 +62,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
         type: bulkForm.type,
         speed: bulkForm.speed,
         enabled: true,
-        ip: "", mac: "", description: "", connectedTo: "", vlanId: "",
+        ip: "", mac: "", description: "", connectedTo: "", connectedToInterface: "", vlanId: "",
       });
     }
     updateDevice(device.id, { interfaces: [...existing, ...newIfaces] });
@@ -113,13 +126,6 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
     onUpdate();
   };
 
-  // Helper: resolve device name from ID or name
-  const resolveDeviceName = (ref: string) => {
-    const found = allDevices.find(d => d.id === ref);
-    return found ? found.name : ref;
-  };
-
-  // Get interfaces for selected remote device
   const getRemoteInterfaces = () => {
     const remote = allDevices.find(d => d.id === cableForm.remoteDevice);
     return remote?.interfaces || [];
@@ -173,7 +179,12 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                       {iface.mac && <span className="font-mono text-muted-foreground hidden lg:inline">{iface.mac}</span>}
                       {iface.speed && <span className="bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">{iface.speed}</span>}
                       {iface.vlanId && <span className="bg-info/15 text-info px-1.5 py-0.5 rounded">VLAN {iface.vlanId}</span>}
-                      {iface.connectedTo && <span className="text-muted-foreground">→ {iface.connectedTo}</span>}
+                      {iface.connectedTo && (
+                        <span className="text-muted-foreground">
+                          → {resolveDeviceName(iface.connectedTo)}
+                          {iface.connectedToInterface && <span className="font-mono ml-1">({iface.connectedToInterface})</span>}
+                        </span>
+                      )}
                       <button onClick={(e) => { e.stopPropagation(); removeInterface(iface.id); }} className="ml-auto text-muted-foreground hover:text-destructive shrink-0"><Trash2 className="h-3 w-3" /></button>
                     </div>
                     {/* Inline edit form */}
@@ -191,12 +202,44 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                           <div><label className="text-[10px] text-muted-foreground block mb-0.5">IP-adresse</label><Input value={editIfForm.ip || ""} onChange={e => setEditIfForm({ ...editIfForm, ip: e.target.value })} className="bg-secondary border-border h-8 text-xs" /></div>
                           <div><label className="text-[10px] text-muted-foreground block mb-0.5">MAC-adresse</label><Input value={editIfForm.mac || ""} onChange={e => setEditIfForm({ ...editIfForm, mac: e.target.value })} className="bg-secondary border-border h-8 text-xs" /></div>
                           <div><label className="text-[10px] text-muted-foreground block mb-0.5">VLAN ID</label><Input value={editIfForm.vlanId || ""} onChange={e => setEditIfForm({ ...editIfForm, vlanId: e.target.value })} className="bg-secondary border-border h-8 text-xs" /></div>
+                          <div><label className="text-[10px] text-muted-foreground block mb-0.5">Hastighet</label></div>
+                        </div>
+                        {/* Connected device + interface */}
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold">Tilkobling</p>
+                        <div className="grid grid-cols-2 gap-3">
                           <div>
                             <label className="text-[10px] text-muted-foreground block mb-0.5">Koblet til enhet</label>
-                            <select value={editIfForm.connectedTo || ""} onChange={e => setEditIfForm({ ...editIfForm, connectedTo: e.target.value })} className={selectClass}>
+                            <select
+                              value={editIfForm.connectedTo || ""}
+                              onChange={e => setEditIfForm({ ...editIfForm, connectedTo: e.target.value, connectedToInterface: "" })}
+                              className={selectClass}
+                            >
                               <option value="">Ingen</option>
-                              {allDevices.map(d => <option key={d.id} value={d.name}>{d.name} ({d.ip})</option>)}
+                              {allDevices.map(d => <option key={d.id} value={d.id}>{d.name} ({d.ip})</option>)}
                             </select>
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-muted-foreground block mb-0.5">Grensesnitt på enhet</label>
+                            {editIfForm.connectedTo && getDeviceInterfaces(editIfForm.connectedTo).length > 0 ? (
+                              <select
+                                value={editIfForm.connectedToInterface || ""}
+                                onChange={e => setEditIfForm({ ...editIfForm, connectedToInterface: e.target.value })}
+                                className={selectClass}
+                              >
+                                <option value="">Velg grensesnitt...</option>
+                                {getDeviceInterfaces(editIfForm.connectedTo).map(i => (
+                                  <option key={i.id} value={i.name}>{i.name} {i.ip ? `(${i.ip})` : ""}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              <Input
+                                value={editIfForm.connectedToInterface || ""}
+                                onChange={e => setEditIfForm({ ...editIfForm, connectedToInterface: e.target.value })}
+                                placeholder={editIfForm.connectedTo ? "Skriv inn port..." : "Velg enhet først"}
+                                disabled={!editIfForm.connectedTo}
+                                className="bg-secondary border-border h-8 text-xs"
+                              />
+                            )}
                           </div>
                         </div>
                         <div><label className="text-[10px] text-muted-foreground block mb-0.5">Beskrivelse</label><Input value={editIfForm.description || ""} onChange={e => setEditIfForm({ ...editIfForm, description: e.target.value })} className="bg-secondary border-border h-8 text-xs" /></div>
@@ -258,7 +301,30 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                   <div><label className="text-[10px] text-muted-foreground block mb-0.5">MAC</label><Input value={ifForm.mac} onChange={e => setIfForm({ ...ifForm, mac: e.target.value })} className="bg-secondary border-border h-9 text-xs" /></div>
                   <div><label className="text-[10px] text-muted-foreground block mb-0.5">Hastighet</label><Input value={ifForm.speed} onChange={e => setIfForm({ ...ifForm, speed: e.target.value })} placeholder="1G" className="bg-secondary border-border h-9 text-xs" /></div>
                   <div><label className="text-[10px] text-muted-foreground block mb-0.5">VLAN ID</label><Input value={ifForm.vlanId} onChange={e => setIfForm({ ...ifForm, vlanId: e.target.value })} className="bg-secondary border-border h-9 text-xs" /></div>
-                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Koblet til</label><Input value={ifForm.connectedTo} onChange={e => setIfForm({ ...ifForm, connectedTo: e.target.value })} className="bg-secondary border-border h-9 text-xs" /></div>
+                </div>
+                {/* Connected device + interface */}
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold">Tilkobling</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-0.5">Koblet til enhet</label>
+                    <select value={ifForm.connectedTo} onChange={e => setIfForm({ ...ifForm, connectedTo: e.target.value, connectedToInterface: "" })} className={selectClass}>
+                      <option value="">Ingen</option>
+                      {allDevices.map(d => <option key={d.id} value={d.id}>{d.name} ({d.ip})</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-0.5">Grensesnitt på enhet</label>
+                    {ifForm.connectedTo && getDeviceInterfaces(ifForm.connectedTo).length > 0 ? (
+                      <select value={ifForm.connectedToInterface} onChange={e => setIfForm({ ...ifForm, connectedToInterface: e.target.value })} className={selectClass}>
+                        <option value="">Velg grensesnitt...</option>
+                        {getDeviceInterfaces(ifForm.connectedTo).map(i => (
+                          <option key={i.id} value={i.name}>{i.name} {i.ip ? `(${i.ip})` : ""}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <Input value={ifForm.connectedToInterface} onChange={e => setIfForm({ ...ifForm, connectedToInterface: e.target.value })} placeholder={ifForm.connectedTo ? "Skriv inn port..." : "Velg enhet først"} disabled={!ifForm.connectedTo} className="bg-secondary border-border h-9 text-xs" />
+                    )}
+                  </div>
                 </div>
                 <div className="flex gap-2 justify-end">
                   <Button variant="ghost" size="sm" onClick={() => setShowIfForm(false)}>Avbryt</Button>

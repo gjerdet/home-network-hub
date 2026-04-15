@@ -9,7 +9,8 @@ export interface DeviceInterface {
   speed?: string; // 1G, 10G, etc
   enabled: boolean;
   description?: string;
-  connectedTo?: string; // device name or id
+  connectedTo?: string; // device ID
+  connectedToInterface?: string; // interface name on connected device
   vlanId?: string;
 }
 
