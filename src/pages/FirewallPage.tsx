@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Plus, Trash2, X, Save, Flame, ArrowUp, ArrowDown, Shield, ShieldOff, ChevronDown, ChevronRight, LayoutGrid, List, Edit2 } from "lucide-react";
 import { RuleFlowDiagram } from "@/components/RuleFlowDiagram";
 
-const defaultZones: string[] = ["WAN", "LAN", "DMZ", "WLAN", "VPN", "MGMT", "IOT", "GUEST"];
+// No default zones — only from user's networks
 
 const zoneColors: Record<string, string> = {
   WAN: "bg-destructive/20 text-destructive border-destructive/30",
@@ -33,8 +33,8 @@ export default function FirewallPage() {
 
   // Build zones from user's networks + defaults
   const networks = getNetworks();
-  const networkZones = networks.map(n => n.name.toUpperCase());
-  const zones = [...new Set([...networkZones, ...defaultZones])].sort();
+  const networkZones = networks.map(n => n.name);
+  const zones = networkZones.length > 0 ? networkZones : ["LAN", "WAN"];
 
   const emptyForm = {
     name: "", action: "allow" as FirewallRule["action"], protocol: "TCP",

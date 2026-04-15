@@ -4,6 +4,7 @@ export interface DeviceInterface {
   id: string;
   name: string; // eth0, ens18, etc
   type: "ethernet" | "wifi" | "vlan" | "bridge" | "bond" | "loopback" | "tunnel" | "other";
+  mode?: "access" | "trunk" | "hybrid" | "routed"; // switchport mode
   ip?: string;
   mac?: string;
   speed?: string; // 1G, 10G, etc
@@ -11,7 +12,8 @@ export interface DeviceInterface {
   description?: string;
   connectedTo?: string; // device ID
   connectedToInterface?: string; // interface name on connected device
-  vlanId?: string;
+  vlanId?: string; // access VLAN or native VLAN
+  taggedVlans?: string[]; // trunk tagged VLANs
 }
 
 export interface DeviceRoute {
