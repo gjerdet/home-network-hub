@@ -14,10 +14,11 @@ const selectClass = "w-full h-9 rounded-md bg-secondary border border-border px-
 interface Props {
   device: Device;
   onUpdate: () => void;
+  initialTab?: "interfaces" | "routes" | "cables";
 }
 
-export function DeviceSubData({ device, onUpdate }: Props) {
-  const [tab, setTab] = useState<"interfaces" | "routes" | "cables">("interfaces");
+export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: Props) {
+  const [tab, setTab] = useState<"interfaces" | "routes" | "cables">(initialTab);
 
   // Interfaces
   const [showIfForm, setShowIfForm] = useState(false);
