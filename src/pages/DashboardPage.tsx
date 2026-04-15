@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { NetworkTopology } from "@/components/NetworkTopology";
 import {
   getDevices, getNetworks, getFirewalls, getFirewallRules,
   getDocs, getFiles, Device
@@ -245,6 +246,18 @@ export default function DashboardPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Network topology */}
+      {devices.length > 0 && (
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold text-foreground">Nettverkstopologi</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <NetworkTopology devices={devices} />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
