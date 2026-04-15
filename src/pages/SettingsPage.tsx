@@ -108,8 +108,41 @@ export default function SettingsPage() {
 
           <Separator />
 
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium text-foreground">Korleis koble til database</h3>
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-foreground">Alt. 1 – Lokal PostgreSQL (utan Docker)</h3>
+            <p className="text-xs text-muted-foreground">
+              Om du allereie har ein PostgreSQL-server som kjører lokalt:
+            </p>
+            <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+              <li>Opprett ein database: <code className="text-primary">CREATE DATABASE netdocs;</code></li>
+              <li>Opprett ein brukar: <code className="text-primary">CREATE USER netdocs WITH PASSWORD 'ditt-passord';</code></li>
+              <li>Gi tilgang: <code className="text-primary">GRANT ALL PRIVILEGES ON DATABASE netdocs TO netdocs;</code></li>
+              <li>
+                Start backend manuelt med miljøvariablar:
+                <div className="bg-muted rounded-md p-2 mt-1 font-mono space-y-0.5">
+                  <p>cd backend</p>
+                  <p>npm install</p>
+                  <p>DB_HOST=localhost DB_PORT=5432 DB_NAME=netdocs \</p>
+                  <p>  DB_USER=netdocs DB_PASSWORD=ditt-passord \</p>
+                  <p>  PORT=3001 npm start</p>
+                </div>
+              </li>
+              <li>
+                Bygg og server frontend (eller køyr dev-server):
+                <div className="bg-muted rounded-md p-2 mt-1 font-mono space-y-0.5">
+                  <p>npm run build</p>
+                  <p>npx serve dist -l 80</p>
+                </div>
+              </li>
+              <li>
+                Sett opp ein reverse proxy (nginx/caddy) som sender <code className="text-primary">/api/*</code> til <code className="text-primary">localhost:3001</code>
+              </li>
+              <li>Standard innlogging: <code className="text-primary">admin / admin</code> (opprettast automatisk)</li>
+            </ol>
+
+            <Separator />
+
+            <h3 className="text-sm font-medium text-foreground">Alt. 2 – Docker Compose (alt-i-eitt)</h3>
             <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
               <li>Installer Docker og Docker Compose på serveren din</li>
               <li>Klon prosjektet og kjør <code className="text-primary">docker-compose up -d</code></li>
@@ -117,6 +150,17 @@ export default function SettingsPage() {
               <li>Opne appen på <code className="text-primary">http://din-server:80</code></li>
               <li>Standard innlogging: <code className="text-primary">admin / admin</code></li>
             </ol>
+
+            <Separator />
+
+            <h3 className="text-sm font-medium text-foreground">nginx proxy-konfig (for lokal PG)</h3>
+            <div className="bg-muted rounded-md p-2 mt-1 font-mono text-xs text-muted-foreground space-y-0.5">
+              <p>location /api/ {"{"}</p>
+              <p>    proxy_pass http://127.0.0.1:3001;</p>
+              <p>    proxy_set_header Host $host;</p>
+              <p>    proxy_set_header X-Real-IP $remote_addr;</p>
+              <p>{"}"}</p>
+            </div>
           </div>
         </CardContent>
       </Card>
