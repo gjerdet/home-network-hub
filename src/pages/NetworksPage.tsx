@@ -126,6 +126,9 @@ export default function NetworksPage() {
               {n.gateway && <div className="flex justify-between"><span className="text-muted-foreground">Gateway</span><span className="font-mono text-foreground">{n.gateway}</span></div>}
               {n.dhcpRange && <div className="flex justify-between"><span className="text-muted-foreground">DHCP</span><span className="font-mono text-foreground">{n.dhcpRange}</span></div>}
               {n.domain && <div className="flex justify-between"><span className="text-muted-foreground">Domene</span><span className="font-mono text-foreground">{n.domain}</span></div>}
+              {n.firewallId && (() => { const fw = firewalls.find(f => f.id === n.firewallId); return fw ? (
+                <div className="flex justify-between"><span className="text-muted-foreground flex items-center gap-1"><Shield className="h-3 w-3" /> Brannmur</span><span className="text-foreground">{fw.name}</span></div>
+              ) : null; })()}
 
               {/* DNS section - always show if set */}
               {(n.dns1 || n.dns2) && (
