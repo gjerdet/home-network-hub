@@ -160,6 +160,7 @@ function DeviceDetail({ device, onBack, onEdit, onDelete, onUpdate }: {
               <InfoRow label="Lokasjon" value={device.location} />
               <InfoRow label="Rack" value={device.rack} />
               <InfoRow label="Rack-posisjon" value={device.rackPosition ? `U${device.rackPosition}` : undefined} />
+              <InfoRow label="Rack-høyde" value={device.rackHeight ? `${device.rackHeight}U` : undefined} />
             </Panel>
 
             <Panel title="Maskinvare">
@@ -416,7 +417,8 @@ export default function DevicesPage() {
               <div><label className="text-xs text-muted-foreground mb-1 block">Site</label><Input value={form.site} onChange={e => setForm({ ...form, site: e.target.value })} className="bg-secondary border-border" /></div>
               <div><label className="text-xs text-muted-foreground mb-1 block">Lokasjon</label><Input value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} className="bg-secondary border-border" /></div>
               <div><label className="text-xs text-muted-foreground mb-1 block">Rack</label><Input value={form.rack} onChange={e => setForm({ ...form, rack: e.target.value })} className="bg-secondary border-border" /></div>
-              <div><label className="text-xs text-muted-foreground mb-1 block">Rack-posisjon (U)</label><Input value={form.rackPosition} onChange={e => setForm({ ...form, rackPosition: e.target.value })} className="bg-secondary border-border" /></div>
+              <div><label className="text-xs text-muted-foreground mb-1 block">Rack-posisjon (U)</label><Input value={form.rackPosition} onChange={e => setForm({ ...form, rackPosition: e.target.value })} placeholder="1" className="bg-secondary border-border" /></div>
+              <div><label className="text-xs text-muted-foreground mb-1 block">Rack-høyde (U)</label><Input type="number" value={(form as any).rackHeight || ""} onChange={e => setForm({ ...form, rackHeight: e.target.value ? Number(e.target.value) : undefined } as any)} placeholder="1" className="bg-secondary border-border" /></div>
               <div><label className="text-xs text-muted-foreground mb-1 block">Management IP</label><Input value={form.managementIp} onChange={e => setForm({ ...form, managementIp: e.target.value })} className="bg-secondary border-border" /></div>
               <div><label className="text-xs text-muted-foreground mb-1 block">Primært grensesnitt</label><Input value={form.primaryInterface} onChange={e => setForm({ ...form, primaryInterface: e.target.value })} placeholder="eth0" className="bg-secondary border-border" /></div>
               <div><label className="text-xs text-muted-foreground mb-1 block">Tenant</label><Input value={form.tenant} onChange={e => setForm({ ...form, tenant: e.target.value })} className="bg-secondary border-border" /></div>
