@@ -7,6 +7,7 @@ import { Plus, Trash2, Save, X, Network, Route, Cable, Layers, Edit2, ChevronDow
 const ifaceTypes = ["ethernet", "wifi", "vlan", "bridge", "bond", "loopback", "tunnel", "other"] as const;
 const ifaceModes = ["access", "trunk", "hybrid", "routed"] as const;
 const ifaceModeLabels: Record<string, string> = { access: "Access", trunk: "Trunk", hybrid: "Hybrid", routed: "Routed" };
+const ifaceSpeeds = ["10M", "100M", "1G", "2.5G", "5G", "10G", "25G", "40G", "100G"] as const;
 const cableTypes = ["cat5e", "cat6", "cat6a", "cat7", "fiber-sm", "fiber-mm", "dac", "coax", "other"] as const;
 const cableTypeLabels: Record<string, string> = { "cat5e": "Cat5e", "cat6": "Cat6", "cat6a": "Cat6a", "cat7": "Cat7", "fiber-sm": "Fiber SM", "fiber-mm": "Fiber MM", "dac": "DAC", "coax": "Coax", "other": "Annet" };
 const cableStatusLabels: Record<string, string> = { connected: "Tilkoblet", planned: "Planlagt", broken: "Ødelagt" };
@@ -203,7 +204,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                               <option value="up">Oppe</option><option value="down">Nede</option>
                             </select>
                           </div>
-                          <div><label className="text-[10px] text-muted-foreground block mb-0.5">Hastighet</label><Input value={editIfForm.speed || ""} onChange={e => setEditIfForm({ ...editIfForm, speed: e.target.value })} placeholder="1G" className="bg-secondary border-border h-8 text-xs" /></div>
+                          <div><label className="text-[10px] text-muted-foreground block mb-0.5">Hastighet</label><select value={editIfForm.speed || ""} onChange={e => setEditIfForm({ ...editIfForm, speed: e.target.value })} className={selectClass}><option value="">—</option>{ifaceSpeeds.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
                           <div><label className="text-[10px] text-muted-foreground block mb-0.5">IP-adresse</label><Input value={editIfForm.ip || ""} onChange={e => setEditIfForm({ ...editIfForm, ip: e.target.value })} className="bg-secondary border-border h-8 text-xs" /></div>
                           <div><label className="text-[10px] text-muted-foreground block mb-0.5">MAC-adresse</label><Input value={editIfForm.mac || ""} onChange={e => setEditIfForm({ ...editIfForm, mac: e.target.value })} className="bg-secondary border-border h-8 text-xs" /></div>
                           <div>
@@ -324,7 +325,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                   <div><label className="text-[10px] text-muted-foreground block mb-0.5">Start-nr</label><Input type="number" value={bulkForm.start} onChange={e => setBulkForm({ ...bulkForm, start: Number(e.target.value) })} className="bg-secondary border-border h-9 text-xs" /></div>
                   <div><label className="text-[10px] text-muted-foreground block mb-0.5">Antall</label><Input type="number" value={bulkForm.count} onChange={e => setBulkForm({ ...bulkForm, count: Number(e.target.value) })} className="bg-secondary border-border h-9 text-xs" /></div>
                   <div><label className="text-[10px] text-muted-foreground block mb-0.5">Type</label><select value={bulkForm.type} onChange={e => setBulkForm({ ...bulkForm, type: e.target.value as any })} className={selectClass}>{ifaceTypes.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
-                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Hastighet</label><Input value={bulkForm.speed} onChange={e => setBulkForm({ ...bulkForm, speed: e.target.value })} placeholder="1G" className="bg-secondary border-border h-9 text-xs" /></div>
+                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Hastighet</label><select value={bulkForm.speed} onChange={e => setBulkForm({ ...bulkForm, speed: e.target.value })} className={selectClass}><option value="">—</option>{ifaceSpeeds.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
                 </div>
                 {bulkForm.prefix && bulkForm.count > 0 && (
                   <p className="text-[10px] text-muted-foreground bg-secondary/60 rounded px-2 py-1.5">
@@ -345,7 +346,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                   <div><label className="text-[10px] text-muted-foreground block mb-0.5">Type</label><select value={ifForm.type} onChange={e => setIfForm({ ...ifForm, type: e.target.value as any })} className={selectClass}>{ifaceTypes.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
                   <div><label className="text-[10px] text-muted-foreground block mb-0.5">IP</label><Input value={ifForm.ip} onChange={e => setIfForm({ ...ifForm, ip: e.target.value })} className="bg-secondary border-border h-9 text-xs" /></div>
                   <div><label className="text-[10px] text-muted-foreground block mb-0.5">MAC</label><Input value={ifForm.mac} onChange={e => setIfForm({ ...ifForm, mac: e.target.value })} className="bg-secondary border-border h-9 text-xs" /></div>
-                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Hastighet</label><Input value={ifForm.speed} onChange={e => setIfForm({ ...ifForm, speed: e.target.value })} placeholder="1G" className="bg-secondary border-border h-9 text-xs" /></div>
+                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Hastighet</label><select value={ifForm.speed} onChange={e => setIfForm({ ...ifForm, speed: e.target.value })} className={selectClass}><option value="">—</option>{ifaceSpeeds.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
                   <div>
                     <label className="text-[10px] text-muted-foreground block mb-0.5">Modus</label>
                     <select value={(ifForm as any).mode || ""} onChange={e => setIfForm({ ...ifForm, mode: e.target.value as any } as any)} className={selectClass}>
