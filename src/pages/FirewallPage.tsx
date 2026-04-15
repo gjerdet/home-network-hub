@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getFirewallRules, addFirewallRule, deleteFirewallRule, saveFirewallRules, getNetworks, type FirewallRule, type FirewallZone } from "@/lib/store";
+import { getFirewallRules, addFirewallRule, deleteFirewallRule, saveFirewallRules, updateFirewallRule, getNetworks, type FirewallRule, type FirewallZone } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, X, Save, Flame, ArrowUp, ArrowDown, Shield, ShieldOff, ChevronDown, ChevronRight, LayoutGrid, List } from "lucide-react";
