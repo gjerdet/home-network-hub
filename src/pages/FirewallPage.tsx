@@ -2,26 +2,30 @@ import { useState, useEffect } from "react";
 import { getFirewallRules, addFirewallRule, deleteFirewallRule, saveFirewallRules, type FirewallRule } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, X, Save, Flame, ArrowUp, ArrowDown, Shield, ShieldOff } from "lucide-react";
+import { Plus, Trash2, X, Save, Flame, ArrowUp, ArrowDown, Shield, ShieldOff, ChevronDown, ChevronRight } from "lucide-react";
+import { RuleFlowDiagram } from "@/components/RuleFlowDiagram";
 
 const actionColors = { allow: "bg-success/20 text-success", deny: "bg-destructive/20 text-destructive", reject: "bg-warning/20 text-warning" };
 
 export default function FirewallPage() {
   const [rules, setRules] = useState<FirewallRule[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [expandedRule, setExpandedRule] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", action: "allow" as const, protocol: "TCP", source: "any", destination: "any", port: "", direction: "inbound" as const, enabled: true, notes: "" });
 
   useEffect(() => { setRules(getFirewallRules()); }, []);
 
   const handleSave = () => {
     if (!form.name) return;
-    addFirewallRule({ ...form, order: rules.length });
-    setRules(getFirewallRules());
+    const newRule = addFirewallRule({ ...form, order: rules.length });
+    const updated = getFirewallRules();
+    setRules(updated);
     setShowForm(false);
+    setExpandedRule(newRule.id);
     setForm({ name: "", action: "allow", protocol: "TCP", source: "any", destination: "any", port: "", direction: "inbound", enabled: true, notes: "" });
   };
 
-  const handleDelete = (id: string) => { deleteFirewallRule(id); setRules(getFirewallRules()); };
+  const handleDelete = (id: string) => { deleteFirewallRule(id); setRules(getFirewallRules()); if (expandedRule === id) setExpandedRule(null); };
 
   const toggleEnabled = (id: string) => {
     const updated = rules.map(r => r.id === id ? { ...r, enabled: !r.enabled } : r);
@@ -39,12 +43,16 @@ export default function FirewallPage() {
     setRules(newRules);
   };
 
+  const toggleExpand = (id: string) => {
+    setExpandedRule(prev => prev === id ? null : id);
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Brannmurregler</h1>
-          <p className="text-sm text-muted-foreground mt-1">{rules.length} regler</p>
+          <p className="text-sm text-muted-foreground mt-1">{rules.length} regler · Klikk en regel for å se trafikkflyt</p>
         </div>
         <Button onClick={() => setShowForm(true)}><Plus className="h-4 w-4 mr-1" /> Ny regel</Button>
       </div>
@@ -95,6 +103,15 @@ export default function FirewallPage() {
             <label className="text-xs text-muted-foreground mb-1 block">Notater</label>
             <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} className="w-full h-16 rounded-md bg-secondary border border-border px-3 py-2 text-sm text-foreground resize-none" />
           </div>
+
+          {/* Live preview of the flow */}
+          {form.name && (
+            <div className="mt-4 border border-border rounded-lg bg-background p-4">
+              <p className="text-xs text-muted-foreground mb-2 text-center">Forhåndsvisning av trafikkflyt</p>
+              <RuleFlowDiagram rule={{ id: "preview", ...form, order: 0 }} />
+            </div>
+          )}
+
           <div className="mt-4 flex justify-end"><Button onClick={handleSave}><Save className="h-4 w-4 mr-1" /> Lagre</Button></div>
         </div>
       )}
@@ -104,6 +121,7 @@ export default function FirewallPage() {
           <thead>
             <tr className="border-b border-border text-left text-muted-foreground">
               <th className="px-4 py-3 font-medium w-8">#</th>
+              <th className="px-4 py-3 font-medium w-8"></th>
               <th className="px-4 py-3 font-medium">Navn</th>
               <th className="px-4 py-3 font-medium">Handling</th>
               <th className="px-4 py-3 font-medium">Protokoll</th>
@@ -116,24 +134,40 @@ export default function FirewallPage() {
           </thead>
           <tbody>
             {rules.map((r, i) => (
-              <tr key={r.id} className={`border-b border-border ${!r.enabled ? "opacity-40" : ""}`}>
-                <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
-                <td className="px-4 py-3 font-medium text-foreground">{r.name}</td>
-                <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded ${actionColors[r.action]}`}>{r.action === "allow" ? "Tillat" : r.action === "deny" ? "Blokker" : "Avvis"}</span></td>
-                <td className="px-4 py-3 text-muted-foreground font-mono">{r.protocol}</td>
-                <td className="px-4 py-3 text-muted-foreground font-mono">{r.source}</td>
-                <td className="px-4 py-3 text-muted-foreground font-mono">{r.destination}</td>
-                <td className="px-4 py-3 text-muted-foreground font-mono">{r.port || "*"}</td>
-                <td className="px-4 py-3 text-muted-foreground">{r.direction === "inbound" ? "↓ Inn" : "↑ Ut"}</td>
-                <td className="px-4 py-3">
-                  <div className="flex gap-1">
-                    <button onClick={() => moveRule(r.id, -1)} className="p-1 text-muted-foreground hover:text-foreground"><ArrowUp className="h-3 w-3" /></button>
-                    <button onClick={() => moveRule(r.id, 1)} className="p-1 text-muted-foreground hover:text-foreground"><ArrowDown className="h-3 w-3" /></button>
-                    <button onClick={() => toggleEnabled(r.id)} className="p-1 text-muted-foreground hover:text-foreground">{r.enabled ? <Shield className="h-3 w-3" /> : <ShieldOff className="h-3 w-3" />}</button>
-                    <button onClick={() => handleDelete(r.id)} className="p-1 text-muted-foreground hover:text-destructive"><Trash2 className="h-3 w-3" /></button>
-                  </div>
-                </td>
-              </tr>
+              <>
+                <tr
+                  key={r.id}
+                  className={`border-b border-border cursor-pointer hover:bg-secondary/50 transition-colors ${!r.enabled ? "opacity-40" : ""} ${expandedRule === r.id ? "bg-secondary/30" : ""}`}
+                  onClick={() => toggleExpand(r.id)}
+                >
+                  <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {expandedRule === r.id ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                  </td>
+                  <td className="px-4 py-3 font-medium text-foreground">{r.name}</td>
+                  <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded ${actionColors[r.action]}`}>{r.action === "allow" ? "Tillat" : r.action === "deny" ? "Blokker" : "Avvis"}</span></td>
+                  <td className="px-4 py-3 text-muted-foreground font-mono">{r.protocol}</td>
+                  <td className="px-4 py-3 text-muted-foreground font-mono">{r.source}</td>
+                  <td className="px-4 py-3 text-muted-foreground font-mono">{r.destination}</td>
+                  <td className="px-4 py-3 text-muted-foreground font-mono">{r.port || "*"}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{r.direction === "inbound" ? "↓ Inn" : "↑ Ut"}</td>
+                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                    <div className="flex gap-1">
+                      <button onClick={() => moveRule(r.id, -1)} className="p-1 text-muted-foreground hover:text-foreground"><ArrowUp className="h-3 w-3" /></button>
+                      <button onClick={() => moveRule(r.id, 1)} className="p-1 text-muted-foreground hover:text-foreground"><ArrowDown className="h-3 w-3" /></button>
+                      <button onClick={() => toggleEnabled(r.id)} className="p-1 text-muted-foreground hover:text-foreground">{r.enabled ? <Shield className="h-3 w-3" /> : <ShieldOff className="h-3 w-3" />}</button>
+                      <button onClick={() => handleDelete(r.id)} className="p-1 text-muted-foreground hover:text-destructive"><Trash2 className="h-3 w-3" /></button>
+                    </div>
+                  </td>
+                </tr>
+                {expandedRule === r.id && (
+                  <tr key={`${r.id}-flow`} className="border-b border-border bg-background/50">
+                    <td colSpan={10} className="px-4 py-2">
+                      <RuleFlowDiagram rule={r} />
+                    </td>
+                  </tr>
+                )}
+              </>
             ))}
           </tbody>
         </table>
