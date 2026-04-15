@@ -27,6 +27,12 @@ interface NavGroup {
 
 const makeNavGroups = (onExport: () => void, onImport: () => void): NavGroup[] => [
   {
+    label: "Dashboard",
+    items: [
+      { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+    ],
+  },
+  {
     label: "Organisasjon",
     items: [
       { title: "Nettverk", url: "/networks", icon: Globe },
