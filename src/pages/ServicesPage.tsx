@@ -4,7 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ConfirmDialog } from "@/components/ConfirmDialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export interface ServiceLink {
   id: string;
@@ -183,13 +186,18 @@ export default function ServicesPage() {
       </Dialog>
 
       {/* Delete confirm */}
-      <ConfirmDialog
-        open={!!deleteId}
-        onOpenChange={open => { if (!open) setDeleteId(null); }}
-        title="Slett teneste"
-        description="Er du sikker på at du vil slette denne tenesta?"
-        onConfirm={handleDelete}
-      />
+      <AlertDialog open={!!deleteId} onOpenChange={open => { if (!open) setDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Slett teneste</AlertDialogTitle>
+            <AlertDialogDescription>Er du sikker på at du vil slette denne tenesta?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Slett</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
