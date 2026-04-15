@@ -7,17 +7,34 @@ export interface Device {
   mac?: string;
   type: DeviceType;
   role: string;
-  status: "online" | "offline" | "maintenance";
+  status: "online" | "offline" | "maintenance" | "planned" | "decommissioned";
   location?: string;
   manufacturer?: string;
   model?: string;
+  serialNumber?: string;
+  os?: string;
+  osVersion?: string;
+  firmware?: string;
+  cpuCores?: number;
+  ramGb?: number;
+  storageGb?: number;
+  primaryInterface?: string;
+  managementIp?: string;
+  site?: string;
+  rack?: string;
+  rackPosition?: string;
+  tenant?: string;
+  assetTag?: string;
+  purchaseDate?: string;
+  warrantyEnd?: string;
   notes?: string;
   image?: string;
+  tags?: string[];
   createdAt: string;
   updatedAt: string;
 }
 
-export type DeviceType = "router" | "switch" | "server" | "ap" | "nas" | "firewall" | "other";
+export type DeviceType = "router" | "switch" | "server" | "ap" | "nas" | "firewall" | "vm" | "container" | "pdu" | "ups" | "other";
 
 export interface DocPage {
   id: string;
@@ -65,9 +82,20 @@ export interface UploadedFile {
 export interface User {
   id: string;
   username: string;
-  password: string; // hashed in a real app, plain for local demo
-  role: "admin" | "viewer";
+  password: string;
+  displayName?: string;
+  email?: string;
+  role: "admin" | "editor" | "viewer";
 }
+
+export const updateUser = (id: string, updates: Partial<User>) => {
+  const users = getUsers().map(u => u.id === id ? { ...u, ...updates } : u);
+  saveUsers(users);
+  const current = getCurrentUser();
+  if (current?.id === id) {
+    setCurrentUser({ ...current, ...updates });
+  }
+};
 
 function getItem<T>(key: string, fallback: T): T {
   try {
