@@ -79,9 +79,14 @@ export type DeviceType = "router" | "switch" | "server" | "ap" | "nas" | "firewa
 export interface DocPage {
   id: string;
   title: string;
-  content: string; // markdown-like content
+  content: string; // HTML from tiptap
   category: string;
   tags: string[];
+  parentId?: string; // for wiki tree structure
+  linkedDevices?: string[]; // device IDs
+  linkedNetworks?: string[]; // network IDs
+  icon?: string;
+  order?: number;
   createdAt: string;
   updatedAt: string;
 }
