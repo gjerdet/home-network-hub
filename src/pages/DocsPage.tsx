@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { TiptapEditor } from "@/components/TiptapEditor";
 import {
   Plus, FileText, Trash2, Edit2, Save, X, ChevronRight, ChevronDown,
-  FolderOpen, Search, ArrowLeft, Server, Globe, Tag, Clock,
-  FileCode, FileQuestion, Settings, AlertTriangle, BookOpen
+  FolderOpen, Search, Server, Globe, Copy, Check,
+  Settings, AlertTriangle, BookOpen, Clock, Folder, FolderPlus
 } from "lucide-react";
 
 const categories = ["Generelt", "Oppsett", "Konfigurasjon", "Feilsøking", "Prosedyrer"];
