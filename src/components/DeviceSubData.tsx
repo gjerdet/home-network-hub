@@ -175,6 +175,17 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
   };
 
   const removeCable = (id: string) => {
+    const cable = (device.cables || []).find(c => c.id === id);
+    // Remove reverse cable on remote device
+    if (cable?.remoteDevice && cable.remotePort) {
+      const remoteDevice = getDevices().find(d => d.id === cable.remoteDevice);
+      if (remoteDevice) {
+        const updatedRemoteCables = (remoteDevice.cables || []).filter(c =>
+          !(c.localPort === cable.remotePort && c.remoteDevice === device.id && c.remotePort === cable.localPort)
+        );
+        updateDevice(cable.remoteDevice, { cables: updatedRemoteCables });
+      }
+    }
     updateDevice(device.id, { cables: (device.cables || []).filter(c => c.id !== id) });
     onUpdate();
   };
