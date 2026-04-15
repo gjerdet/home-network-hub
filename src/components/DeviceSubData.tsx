@@ -170,6 +170,14 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                 ))}
               </div>
             )}
+            {routes.length === 0 && !showRouteForm && (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <Route className="h-10 w-10 text-muted-foreground/40 mb-3" />
+                <p className="text-sm text-muted-foreground mb-1">Ingen ruter konfigurert</p>
+                <p className="text-xs text-muted-foreground/70 mb-4">Legg til statiske ruter, default gateway osv.</p>
+                <Button size="sm" onClick={() => setShowRouteForm(true)}><Plus className="h-3 w-3 mr-1" /> Legg til rute</Button>
+              </div>
+            )}
             {showRouteForm ? (
               <div className="bg-background border border-border rounded-md p-3 space-y-3">
                 <div className="grid grid-cols-3 gap-3">
@@ -184,7 +192,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                   <Button size="sm" onClick={addRoute}><Save className="h-3 w-3 mr-1" /> Lagre</Button>
                 </div>
               </div>
-            ) : (
+            ) : routes.length > 0 && (
               <button onClick={() => setShowRouteForm(true)} className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"><Plus className="h-3 w-3" /> Legg til rute</button>
             )}
           </div>
