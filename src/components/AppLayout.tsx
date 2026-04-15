@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Monitor, FileText, Flame, Globe, FolderOpen, Users, LogOut, Search, ChevronDown, Server, Network, Cable, MapPin, Building2, Shield, LayoutGrid, Tag, Download, Upload } from "lucide-react";
+import { Monitor, FileText, Flame, Globe, FolderOpen, Users, LogOut, Search, ChevronDown, Server, Network, Cable, MapPin, Building2, Shield, LayoutGrid, Tag, Download, Upload, LayoutDashboard } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate, useLocation } from "react-router-dom";
 import { logout, getCurrentUser, exportBackup, importBackup } from "@/lib/store";
