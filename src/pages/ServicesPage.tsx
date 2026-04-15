@@ -55,6 +55,16 @@ export default function ServicesPage() {
     setDialogOpen(true);
   };
 
+  const generateId = () => {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+      try { return crypto.randomUUID(); } catch { /* fallback */ }
+    }
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+      const r = (Math.random() * 16) | 0;
+      return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+    });
+  };
+
   const handleSave = () => {
     if (!name.trim() || !url.trim()) return;
     let updated: ServiceLink[];
@@ -63,7 +73,7 @@ export default function ServicesPage() {
         s.id === editing.id ? { ...s, name: name.trim(), url: url.trim(), description: description.trim() } : s
       );
     } else {
-      updated = [...services, { id: crypto.randomUUID(), name: name.trim(), url: url.trim(), description: description.trim() }];
+      updated = [...services, { id: generateId(), name: name.trim(), url: url.trim(), description: description.trim() }];
     }
     setServices(updated);
     saveServices(updated);
