@@ -34,7 +34,7 @@ const typeLabels: Record<DeviceType, string> = {
   router: "Ruter", switch: "Switch", server: "Server", ap: "Aksesspunkt", nas: "NAS", firewall: "Brannmur", other: "Annet"
 };
 
-const emptyDevice = { name: "", ip: "", mac: "", type: "router" as DeviceType, role: "", status: "online" as const, location: "", manufacturer: "", model: "", notes: "" };
+const emptyDevice = { name: "", ip: "", mac: "", type: "router" as DeviceType, role: "", status: "online" as Device["status"], location: "", manufacturer: "", model: "", notes: "" };
 
 export default function DevicesPage() {
   const [devices, setDevices] = useState<Device[]>([]);
