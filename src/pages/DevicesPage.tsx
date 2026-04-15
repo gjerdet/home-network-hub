@@ -439,7 +439,11 @@ export default function DevicesPage() {
         </div>
       )}
 
-      {/* Device table */}
+      {/* Rack view */}
+      {viewMode === "rack" && (
+        <RackView devices={devices} />
+      )}
+
       {viewMode === "list" && (
         <div className="bg-card border border-border rounded-lg overflow-hidden">
           <table className="w-full text-sm">
