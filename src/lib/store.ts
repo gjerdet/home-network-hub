@@ -140,9 +140,6 @@ export interface NetworkInfo {
   dhcpRange?: string;
   dns1?: string;
   dns2?: string;
-  wanAddress?: string;
-  wanGateway?: string;
-  wanType?: "static" | "dhcp" | "pppoe";
   domain?: string;
   description?: string;
   firewallId?: string; // linked firewall
