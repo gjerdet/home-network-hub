@@ -246,7 +246,7 @@ export default function FirewallPage() {
 
       {/* List view */}
       <div className="bg-card border border-border rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm table-striped">
           <thead>
             <tr className="border-b border-border text-left text-muted-foreground">
               <th className="px-3 py-3 font-medium w-8">#</th>
