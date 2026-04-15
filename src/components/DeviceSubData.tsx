@@ -2,7 +2,7 @@ import { useState } from "react";
 import { type Device, type DeviceInterface, type DeviceRoute, type DeviceCable, updateDevice } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Save, X, Network, Route, Cable } from "lucide-react";
+import { Plus, Trash2, Save, X, Network, Route, Cable, Layers } from "lucide-react";
 
 const ifaceTypes = ["ethernet", "wifi", "vlan", "bridge", "bond", "loopback", "tunnel", "other"] as const;
 const cableTypes = ["cat5e", "cat6", "cat6a", "cat7", "fiber-sm", "fiber-mm", "dac", "coax", "other"] as const;
@@ -22,7 +22,9 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
 
   // Interfaces
   const [showIfForm, setShowIfForm] = useState(false);
+  const [showBulkForm, setShowBulkForm] = useState(false);
   const [ifForm, setIfForm] = useState({ name: "", type: "ethernet" as DeviceInterface["type"], ip: "", mac: "", speed: "", enabled: true, description: "", connectedTo: "", vlanId: "" });
+  const [bulkForm, setBulkForm] = useState({ prefix: "eth", start: 0, count: 24, type: "ethernet" as DeviceInterface["type"], speed: "1G" });
 
   const addInterface = () => {
     if (!ifForm.name) return;
@@ -31,6 +33,26 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
     onUpdate();
     setShowIfForm(false);
     setIfForm({ name: "", type: "ethernet", ip: "", mac: "", speed: "", enabled: true, description: "", connectedTo: "", vlanId: "" });
+  };
+
+  const addBulkInterfaces = () => {
+    if (!bulkForm.prefix || bulkForm.count < 1) return;
+    const existing = device.interfaces || [];
+    const newIfaces: DeviceInterface[] = [];
+    for (let i = 0; i < bulkForm.count; i++) {
+      newIfaces.push({
+        id: crypto.randomUUID(),
+        name: `${bulkForm.prefix}${bulkForm.start + i}`,
+        type: bulkForm.type,
+        speed: bulkForm.speed,
+        enabled: true,
+        ip: "", mac: "", description: "", connectedTo: "", vlanId: "",
+      });
+    }
+    updateDevice(device.id, { interfaces: [...existing, ...newIfaces] });
+    onUpdate();
+    setShowBulkForm(false);
+    setBulkForm({ prefix: "eth", start: 0, count: 24, type: "ethernet", speed: "1G" });
   };
 
   const removeInterface = (id: string) => {
@@ -106,12 +128,12 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
         {tab === "interfaces" && (
           <div>
             {ifaces.length > 0 && (
-              <div className="space-y-2 mb-3">
+              <div className="space-y-1 mb-3 max-h-[400px] overflow-y-auto">
                 {ifaces.map(iface => (
-                  <div key={iface.id} className="flex items-center gap-3 bg-background rounded-md border border-border p-3 text-xs">
+                  <div key={iface.id} className="flex items-center gap-3 bg-background rounded-md border border-border px-3 py-2 text-xs">
                     <div className={`w-2 h-2 rounded-full ${iface.enabled ? "bg-success" : "bg-destructive"}`} />
-                    <span className="font-mono font-medium text-foreground w-20">{iface.name}</span>
-                    <span className="text-muted-foreground">{iface.type}</span>
+                    <span className="font-mono font-medium text-foreground w-20 truncate">{iface.name}</span>
+                    <span className="text-muted-foreground w-16">{iface.type}</span>
                     {iface.ip && <span className="font-mono text-foreground">{iface.ip}</span>}
                     {iface.mac && <span className="font-mono text-muted-foreground">{iface.mac}</span>}
                     {iface.speed && <span className="bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">{iface.speed}</span>}
@@ -122,14 +144,48 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                 ))}
               </div>
             )}
-            {ifaces.length === 0 && !showIfForm && (
+
+            {/* Empty state */}
+            {ifaces.length === 0 && !showIfForm && !showBulkForm && (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <Network className="h-10 w-10 text-muted-foreground/40 mb-3" />
                 <p className="text-sm text-muted-foreground mb-1">Ingen grensesnitt konfigurert</p>
-                <p className="text-xs text-muted-foreground/70 mb-4">Legg til nettverksgrensesnitt som eth0, ens18, bridge0 osv.</p>
-                <Button size="sm" onClick={() => setShowIfForm(true)}><Plus className="h-3 w-3 mr-1" /> Legg til grensesnitt</Button>
+                <p className="text-xs text-muted-foreground/70 mb-4">Legg til enkeltvis eller generer flere porter på en gang.</p>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={() => setShowIfForm(true)}><Plus className="h-3 w-3 mr-1" /> Enkelt</Button>
+                  <Button size="sm" variant="outline" onClick={() => setShowBulkForm(true)}><Layers className="h-3 w-3 mr-1" /> Generer flere</Button>
+                </div>
               </div>
             )}
+
+            {/* Bulk generate form */}
+            {showBulkForm && (
+              <div className="bg-background border border-primary/30 rounded-md p-4 space-y-3 mb-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <Layers className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium text-foreground">Generer grensesnitt</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Opprett f.eks. 48 switchporter (GigabitEthernet0/1 – GigabitEthernet0/48)</p>
+                <div className="grid grid-cols-5 gap-3">
+                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Prefiks</label><Input value={bulkForm.prefix} onChange={e => setBulkForm({ ...bulkForm, prefix: e.target.value })} placeholder="GigabitEthernet0/" className="bg-secondary border-border h-9 text-xs" /></div>
+                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Start-nr</label><Input type="number" value={bulkForm.start} onChange={e => setBulkForm({ ...bulkForm, start: Number(e.target.value) })} className="bg-secondary border-border h-9 text-xs" /></div>
+                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Antall</label><Input type="number" value={bulkForm.count} onChange={e => setBulkForm({ ...bulkForm, count: Number(e.target.value) })} className="bg-secondary border-border h-9 text-xs" /></div>
+                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Type</label><select value={bulkForm.type} onChange={e => setBulkForm({ ...bulkForm, type: e.target.value as any })} className={selectClass}>{ifaceTypes.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
+                  <div><label className="text-[10px] text-muted-foreground block mb-0.5">Hastighet</label><Input value={bulkForm.speed} onChange={e => setBulkForm({ ...bulkForm, speed: e.target.value })} placeholder="1G" className="bg-secondary border-border h-9 text-xs" /></div>
+                </div>
+                {bulkForm.prefix && bulkForm.count > 0 && (
+                  <p className="text-[10px] text-muted-foreground bg-secondary/60 rounded px-2 py-1.5">
+                    Forhåndsvisning: <span className="font-mono text-foreground">{bulkForm.prefix}{bulkForm.start}</span> → <span className="font-mono text-foreground">{bulkForm.prefix}{bulkForm.start + bulkForm.count - 1}</span> ({bulkForm.count} stk)
+                  </p>
+                )}
+                <div className="flex gap-2 justify-end">
+                  <Button variant="ghost" size="sm" onClick={() => setShowBulkForm(false)}>Avbryt</Button>
+                  <Button size="sm" onClick={addBulkInterfaces}><Save className="h-3 w-3 mr-1" /> Opprett {bulkForm.count} grensesnitt</Button>
+                </div>
+              </div>
+            )}
+
+            {/* Single add form */}
             {showIfForm ? (
               <div className="bg-background border border-border rounded-md p-3 space-y-3">
                 <div className="grid grid-cols-3 gap-3">
@@ -146,8 +202,11 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                   <Button size="sm" onClick={addInterface}><Save className="h-3 w-3 mr-1" /> Lagre</Button>
                 </div>
               </div>
-            ) : ifaces.length > 0 && (
-              <button onClick={() => setShowIfForm(true)} className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"><Plus className="h-3 w-3" /> Legg til grensesnitt</button>
+            ) : ifaces.length > 0 && !showBulkForm && (
+              <div className="flex gap-3 mt-2">
+                <button onClick={() => setShowIfForm(true)} className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"><Plus className="h-3 w-3" /> Legg til enkelt</button>
+                <button onClick={() => setShowBulkForm(true)} className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"><Layers className="h-3 w-3" /> Generer flere</button>
+              </div>
             )}
           </div>
         )}
