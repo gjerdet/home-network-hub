@@ -355,12 +355,12 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                             )}
                           </div>
                         </div>
-                        {/* WAN + LAG */}
-                        <div className="grid grid-cols-2 gap-3">
+                        {/* WAN + PoE + LAG */}
+                        <div className="grid grid-cols-3 gap-3">
                           <div>
                             <label className="flex items-center gap-2 text-[10px] text-muted-foreground cursor-pointer py-1">
                               <input type="checkbox" checked={editIfForm.isWan || false} onChange={e => setEditIfForm({ ...editIfForm, isWan: e.target.checked })} className="rounded border-border" />
-                              <Globe className="h-3 w-3 text-warning" /> WAN-grensesnitt
+                              <Globe className="h-3 w-3 text-warning" /> WAN
                             </label>
                           </div>
                           <div>
@@ -372,10 +372,9 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
                               <option value="poe++">PoE++ (60W+)</option>
                             </select>
                           </div>
-                          </div>
                           {editIfForm.type !== "lag" && (
                             <div>
-                              <label className="text-[10px] text-muted-foreground block mb-0.5">LAG-gruppe (medlem av)</label>
+                              <label className="text-[10px] text-muted-foreground block mb-0.5">LAG-gruppe</label>
                               <select value={editIfForm.lagGroup || ""} onChange={e => setEditIfForm({ ...editIfForm, lagGroup: e.target.value })} className={selectClass}>
                                 <option value="">Ingen</option>
                                 {ifaces.filter(i => i.type === "lag" && i.id !== editingIfaceId).map(i => (
