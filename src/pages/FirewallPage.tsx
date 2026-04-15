@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Plus, Trash2, X, Save, Flame, ArrowUp, ArrowDown, Shield, ShieldOff, ChevronDown, ChevronRight, LayoutGrid, List, Edit2 } from "lucide-react";
 import { RuleFlowDiagram } from "@/components/RuleFlowDiagram";
 
-const defaultZones: string[] = ["WAN", "LAN", "DMZ", "WLAN", "VPN", "MGMT", "IOT", "GUEST"];
+// No default zones — only from user's networks
 
 const zoneColors: Record<string, string> = {
   WAN: "bg-destructive/20 text-destructive border-destructive/30",
