@@ -319,9 +319,25 @@ export default function DevicesPage() {
           <h1 className="text-2xl font-bold text-foreground">Enheter</h1>
           <p className="text-sm text-muted-foreground mt-1">{devices.length} enheter · {filtered.length} vises</p>
         </div>
-        <Button onClick={() => { setShowForm(true); setEditId(null); setForm(emptyDevice); setTagsInput(""); setShowAdvanced(false); }}>
-          <Plus className="h-4 w-4 mr-1" /> Ny enhet
-        </Button>
+        <div className="flex gap-2">
+          <div className="flex bg-secondary rounded-md border border-border">
+            <button onClick={() => setViewMode("list")} className={`px-3 py-1.5 text-xs flex items-center gap-1 rounded-l-md transition-colors ${viewMode === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}><List className="h-3 w-3" /> Liste</button>
+            <button onClick={() => setViewMode("topology")} className={`px-3 py-1.5 text-xs flex items-center gap-1 rounded-r-md transition-colors ${viewMode === "topology" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}><Share2 className="h-3 w-3" /> Topologi</button>
+          </div>
+          {devices.length > 0 && (
+            <Button variant="outline" size="sm" onClick={() => {
+              if (confirm("Er du sikker på at du vil slette alle enheter?")) {
+                saveDevices([]);
+                refreshDevices();
+              }
+            }}>
+              <Trash2 className="h-3 w-3 mr-1" /> Slett alle
+            </Button>
+          )}
+          <Button onClick={() => { setShowForm(true); setEditId(null); setForm(emptyDevice); setTagsInput(""); setShowAdvanced(false); }}>
+            <Plus className="h-4 w-4 mr-1" /> Ny enhet
+          </Button>
+        </div>
       </div>
 
       {/* Filters bar */}
