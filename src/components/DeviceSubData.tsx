@@ -2,9 +2,9 @@ import { useState } from "react";
 import { type Device, type DeviceInterface, type DeviceRoute, type DeviceCable, updateDevice, getDevices, getNetworks } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Save, X, Network, Route, Cable, Layers, Edit2, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Trash2, Save, X, Network, Route, Cable, Layers, Edit2, ChevronDown, ChevronRight, Globe, Link2 } from "lucide-react";
 
-const ifaceTypes = ["ethernet", "wifi", "vlan", "bridge", "bond", "loopback", "tunnel", "other"] as const;
+const ifaceTypes = ["ethernet", "wifi", "vlan", "bridge", "bond", "loopback", "tunnel", "lag", "other"] as const;
 const ifaceModes = ["access", "trunk", "hybrid", "routed"] as const;
 const ifaceModeLabels: Record<string, string> = { access: "Access", trunk: "Trunk", hybrid: "Hybrid", routed: "Routed" };
 const ifaceSpeeds = ["10M", "100M", "1G", "2.5G", "5G", "10G", "25G", "40G", "100G"] as const;
