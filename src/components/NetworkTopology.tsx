@@ -102,6 +102,7 @@ export function NetworkTopology({ devices }: Props) {
       });
     });
 
+    console.log("[Topology] devices:", devices.length, "nodes:", newNodes.length, "links:", newLinks.length, "cables total:", devices.reduce((s, d) => s + (d.cables?.length || 0), 0));
     setNodes(newNodes);
     setLinks(newLinks);
   }, [devices]);
