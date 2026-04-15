@@ -143,14 +143,17 @@ export interface FirewallRule {
 
 export type FirewallZone = "WAN" | "LAN" | "DMZ" | "WLAN" | "VPN" | "MGMT" | "IOT" | "GUEST";
 
-export type NetworkZone = "LAN" | "WAN" | "DMZ" | "GUEST" | "IOT" | "WLAN" | "VPN" | "MGMT" | "VLAN-only";
+export interface NetworkZone {
+  id: string;
+  name: string;
+}
 
 export interface NetworkInfo {
   id: string;
   name: string;
   subnet: string;
   vlan?: string;
-  zone?: NetworkZone;
+  zone?: string; // zone name
   gateway?: string;
   dhcpRange?: string;
   dns1?: string;
@@ -211,6 +214,7 @@ const KEYS = {
   files: "netdocs_files",
   users: "netdocs_users",
   currentUser: "netdocs_current_user",
+  zones: "netdocs_zones",
 };
 
 // Devices
@@ -304,7 +308,21 @@ export const updateNetwork = (id: string, updates: Partial<NetworkInfo>) => {
   saveNetworks(getNetworks().map(n => n.id === id ? { ...n, ...updates } : n));
 };
 
-// Files
+// Zones
+export const getZones = (): NetworkZone[] => getItem(KEYS.zones, []);
+export const saveZones = (z: NetworkZone[]) => setItem(KEYS.zones, z);
+export const addZone = (name: string) => {
+  const zones = getZones();
+  const zone: NetworkZone = { id: crypto.randomUUID(), name };
+  zones.push(zone);
+  saveZones(zones);
+  return zone;
+};
+export const deleteZone = (id: string) => {
+  saveZones(getZones().filter(z => z.id !== id));
+};
+
+
 export const getFiles = (): UploadedFile[] => getItem(KEYS.files, []);
 export const saveFiles = (f: UploadedFile[]) => setItem(KEYS.files, f);
 export const addFile = (f: Omit<UploadedFile, "id" | "createdAt">) => {
