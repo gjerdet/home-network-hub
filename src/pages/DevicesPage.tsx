@@ -320,6 +320,7 @@ export default function DevicesPage() {
         tabs={[
           { key: "list", label: "Liste", icon: List },
           { key: "topology", label: "Topologi", icon: Share2 },
+          { key: "rack", label: "Rack", icon: LayoutGrid },
         ]}
         active={viewMode}
         onChange={k => setViewMode(k as any)}
