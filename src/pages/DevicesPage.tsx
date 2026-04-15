@@ -3,6 +3,7 @@ import { getDevices, addDevice, deleteDevice, updateDevice, type Device, type De
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Edit2, Monitor, Wifi, Server, HardDrive, Shield, Radio, X, Save, Box, Cpu, Zap, Battery, ChevronDown, ChevronRight } from "lucide-react";
+import { DeviceSubData } from "@/components/DeviceSubData";
 
 const typeIcons: Record<DeviceType, React.ReactNode> = {
   router: <Wifi className="h-5 w-5" />,
