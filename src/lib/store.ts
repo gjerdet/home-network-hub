@@ -14,9 +14,10 @@ export interface DeviceInterface {
   connectedToInterface?: string; // interface name on connected device
   vlanId?: string; // access VLAN or native VLAN
   taggedVlans?: string[]; // trunk tagged VLANs
-  isWan?: boolean; // marks this as a WAN interface
-  lagGroup?: string; // LAG group name this interface belongs to (e.g. "bond0")
-  lagMembers?: string[]; // for LAG interfaces: member interface IDs
+  isWan?: boolean;
+  poe?: "none" | "poe" | "poe+" | "poe++"; // PoE capability
+  lagGroup?: string;
+  lagMembers?: string[];
 }
 
 export interface DeviceRoute {
