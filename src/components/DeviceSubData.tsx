@@ -2,7 +2,7 @@ import { useState } from "react";
 import { type Device, type DeviceInterface, type DeviceRoute, type DeviceCable, updateDevice } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Save, X, Network, Route, Cable } from "lucide-react";
+import { Plus, Trash2, Save, X, Network, Route, Cable, Layers } from "lucide-react";
 
 const ifaceTypes = ["ethernet", "wifi", "vlan", "bridge", "bond", "loopback", "tunnel", "other"] as const;
 const cableTypes = ["cat5e", "cat6", "cat6a", "cat7", "fiber-sm", "fiber-mm", "dac", "coax", "other"] as const;
