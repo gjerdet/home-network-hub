@@ -196,7 +196,25 @@ export default function NetworksPage() {
             </div>
           </div>
 
-          {/* Calculated subnet info */}
+          {showZoneManager && (
+            <div className="bg-secondary/50 border border-border rounded-lg p-4 mb-5">
+              <p className="text-xs text-primary font-semibold uppercase tracking-wide mb-2">Administrer soner</p>
+              <div className="flex gap-2 mb-3">
+                <Input value={newZoneName} onChange={e => setNewZoneName(e.target.value)} placeholder="Ny sone-navn..." className="bg-secondary border-border h-8 text-sm flex-1" onKeyDown={e => { if (e.key === "Enter" && newZoneName.trim()) { addZone(newZoneName.trim()); setZones(getZones()); setNewZoneName(""); }}} />
+                <Button size="sm" variant="outline" onClick={() => { if (newZoneName.trim()) { addZone(newZoneName.trim()); setZones(getZones()); setNewZoneName(""); }}} className="h-8"><Plus className="h-3 w-3 mr-1" />Legg til</Button>
+              </div>
+              {zones.length === 0 && <p className="text-xs text-muted-foreground">Ingen soner opprettet ennå.</p>}
+              <div className="flex flex-wrap gap-2">
+                {zones.map(z => (
+                  <span key={z.id} className="inline-flex items-center gap-1.5 bg-card border border-border rounded px-2.5 py-1 text-sm">
+                    {z.name}
+                    <button onClick={() => { deleteZone(z.id); setZones(getZones()); }} className="text-muted-foreground hover:text-destructive"><X className="h-3 w-3" /></button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {subnetInfo && (
             <div className="bg-secondary/50 border border-border rounded-lg p-3 mb-5">
               <div className="flex items-center gap-1.5 mb-2">
