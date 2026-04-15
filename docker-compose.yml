@@ -1,8 +1,42 @@
 version: "3.8"
 
 services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: netdocs
+      POSTGRES_USER: netdocs
+      POSTGRES_PASSWORD: netdocs
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U netdocs"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: netdocs
+      DB_USER: netdocs
+      DB_PASSWORD: netdocs
+      PORT: 3001
+
   app:
     build: .
     ports:
       - "80:80"
     restart: unless-stopped
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
