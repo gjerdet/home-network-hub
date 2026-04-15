@@ -129,6 +129,7 @@ function DeviceDetail({ device, onBack, onEdit, onDelete, onUpdate }: {
           { key: "interfaces" as const, label: "Grensesnitt", icon: Network, count: (device.interfaces || []).length },
           { key: "routes" as const, label: "Ruter", icon: Route, count: (device.routes || []).length },
           { key: "cables" as const, label: "Kabler", icon: Cable, count: (device.cables || []).length },
+          ...(isAP ? [{ key: "ssids" as const, label: "SSID-er", icon: Wifi, count: (device.ssids || []).length }] : []),
         ].map(t => (
           <button
             key={t.key}
@@ -199,8 +200,29 @@ function DeviceDetail({ device, onBack, onEdit, onDelete, onUpdate }: {
               <InfoRow label="Primær IP" value={device.ip} mono />
               <InfoRow label="MAC-adresse" value={device.mac} mono />
               <InfoRow label="Management IP" value={device.managementIp} mono />
+              {showMgmtVlan && <InfoRow label="Management VLAN" value={device.managementVlan ? `VLAN ${device.managementVlan}` : undefined} />}
               <InfoRow label="Primært grensesnitt" value={device.primaryInterface} mono />
             </Panel>
+
+            {isAP && (device.ssids || []).length > 0 && (
+              <Panel title="SSID-er">
+                {device.ssids!.map(ssid => (
+                  <div key={ssid.id} className="flex border-b border-border last:border-0">
+                    <span className="w-40 shrink-0 px-3 py-2 text-xs text-muted-foreground bg-secondary/50 font-medium flex items-center gap-1.5">
+                      <Wifi className="h-3 w-3" /> {ssid.name}
+                    </span>
+                    <div className="flex-1 px-3 py-2 flex gap-3 text-xs">
+                      {ssid.vlan && <span className="bg-primary/10 text-primary px-2 py-0.5 rounded">VLAN {ssid.vlan}</span>}
+                      {ssid.band && <span className="bg-secondary px-2 py-0.5 rounded text-muted-foreground">{ssid.band}</span>}
+                      {ssid.security && <span className="bg-secondary px-2 py-0.5 rounded text-muted-foreground">{ssid.security}</span>}
+                      <span className={`px-2 py-0.5 rounded ${ssid.enabled ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
+                        {ssid.enabled ? "Aktiv" : "Deaktivert"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </Panel>
+            )}
 
             <Panel title="Programvare">
               <InfoRow label="Operativsystem" value={device.os} />
