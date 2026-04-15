@@ -448,7 +448,7 @@ export default function DevicesPage() {
 
       {viewMode === "list" && (
         <div className="bg-card border border-border rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm table-striped">
             <thead>
               <tr className="border-b border-border text-left text-muted-foreground bg-secondary/50">
                 <th className="px-3 py-2.5 font-medium text-xs">Navn</th>
