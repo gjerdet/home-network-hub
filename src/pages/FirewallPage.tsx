@@ -384,6 +384,47 @@ export default function FirewallPage() {
             <h2 className="text-sm font-semibold">{editId ? "Rediger brannmur" : "Ny brannmur"}</h2>
             <button onClick={() => { setShowForm(false); setEditId(null); }} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
           </div>
+
+          {/* Populate from device */}
+          {!editId && devices.length > 0 && (
+            <div className="mb-4">
+              <label className="text-xs text-muted-foreground mb-1 block">Fyll fra innlagt enhet</label>
+              <select
+                value=""
+                onChange={e => {
+                  const d = devices.find(dev => dev.id === e.target.value);
+                  if (d) {
+                    setForm({
+                      ...form,
+                      name: d.name,
+                      manufacturer: d.manufacturer || "",
+                      model: d.model || "",
+                      ip: d.ip || "",
+                      os: d.os ? `${d.os}${d.osVersion ? ` ${d.osVersion}` : ""}` : "",
+                      description: d.role || "",
+                      status: d.status === "online" ? "online" : d.status === "maintenance" ? "maintenance" : "offline",
+                    });
+                  }
+                }}
+                className={selectClass}
+              >
+                <option value="">— Velg enhet —</option>
+                {devices.filter(d => d.type === "firewall").length > 0 && (
+                  <optgroup label="Brannmurer">
+                    {devices.filter(d => d.type === "firewall").map(d => (
+                      <option key={d.id} value={d.id}>{d.name} ({d.ip})</option>
+                    ))}
+                  </optgroup>
+                )}
+                <optgroup label="Alle enheter">
+                  {devices.filter(d => d.type !== "firewall").map(d => (
+                    <option key={d.id} value={d.id}>{d.name} ({d.ip}) — {d.type}</option>
+                  ))}
+                </optgroup>
+              </select>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div><label className="text-xs text-muted-foreground mb-1 block">Navn *</label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="pfSense-01" className="bg-secondary border-border" /></div>
             <div><label className="text-xs text-muted-foreground mb-1 block">Produsent</label><Input value={form.manufacturer} onChange={e => setForm({ ...form, manufacturer: e.target.value })} placeholder="Netgate" className="bg-secondary border-border" /></div>
