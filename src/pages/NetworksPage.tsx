@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import { getNetworks, addNetwork, deleteNetwork, updateNetwork, getFirewalls, getZones, addZone, deleteZone, type NetworkInfo, type Firewall, type NetworkZone } from "@/lib/store";
+import { type NetworkInfo, type Firewall, type NetworkZone } from "@/lib/store";
+import { getNetworksAsync, addNetworkAsync, deleteNetworkAsync, updateNetworkAsync, getFirewallsAsync, getZonesAsync, addZoneAsync, deleteZoneAsync } from "@/lib/data-service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, X, Save, Globe, Edit2, Server, Shield, Info } from "lucide-react";
@@ -76,7 +77,9 @@ export default function NetworksPage() {
   const [newZoneName, setNewZoneName] = useState("");
   const [showZoneManager, setShowZoneManager] = useState(false);
 
-  useEffect(() => { setNetworks(getNetworks()); setFirewalls(getFirewalls()); setZones(getZones()); }, []);
+  useEffect(() => {
+    Promise.all([getNetworksAsync(), getFirewallsAsync(), getZonesAsync()]).then(([n, f, z]) => { setNetworks(n); setFirewalls(f); setZones(z); });
+  }, []);
 
   // Calculate subnet info from networkAddress + prefix
   const subnetInfo = useMemo(() => {
@@ -104,7 +107,7 @@ export default function NetworksPage() {
     setForm(updates);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name || !form.networkAddress) return;
     const subnet = form.networkAddress + form.prefix;
     const dhcpRange = form.dhcpStart && form.dhcpEnd ? `${form.dhcpStart}-${form.dhcpEnd}` : "";
@@ -122,11 +125,11 @@ export default function NetworksPage() {
       firewallId: form.firewallId || undefined,
     };
     if (editId) {
-      updateNetwork(editId, payload);
+      await updateNetworkAsync(editId, payload);
     } else {
-      addNetwork(payload);
+      await addNetworkAsync(payload);
     }
-    setNetworks(getNetworks());
+    setNetworks(await getNetworksAsync());
     setShowForm(false);
     setEditId(null);
     setForm(emptyForm);
@@ -200,15 +203,15 @@ export default function NetworksPage() {
             <div className="bg-secondary/50 border border-border rounded-lg p-4 mb-5">
               <p className="text-xs text-primary font-semibold uppercase tracking-wide mb-2">Administrer soner</p>
               <div className="flex gap-2 mb-3">
-                <Input value={newZoneName} onChange={e => setNewZoneName(e.target.value)} placeholder="Ny sone-navn..." className="bg-secondary border-border h-8 text-sm flex-1" onKeyDown={e => { if (e.key === "Enter" && newZoneName.trim()) { addZone(newZoneName.trim()); setZones(getZones()); setNewZoneName(""); }}} />
-                <Button size="sm" variant="outline" onClick={() => { if (newZoneName.trim()) { addZone(newZoneName.trim()); setZones(getZones()); setNewZoneName(""); }}} className="h-8"><Plus className="h-3 w-3 mr-1" />Legg til</Button>
+                <Input value={newZoneName} onChange={e => setNewZoneName(e.target.value)} placeholder="Ny sone-navn..." className="bg-secondary border-border h-8 text-sm flex-1" onKeyDown={async e => { if (e.key === "Enter" && newZoneName.trim()) { await addZoneAsync(newZoneName.trim()); setZones(await getZonesAsync()); setNewZoneName(""); }}} />
+                <Button size="sm" variant="outline" onClick={async () => { if (newZoneName.trim()) { await addZoneAsync(newZoneName.trim()); setZones(await getZonesAsync()); setNewZoneName(""); }}} className="h-8"><Plus className="h-3 w-3 mr-1" />Legg til</Button>
               </div>
               {zones.length === 0 && <p className="text-xs text-muted-foreground">Ingen soner opprettet ennå.</p>}
               <div className="flex flex-wrap gap-2">
                 {zones.map(z => (
                   <span key={z.id} className="inline-flex items-center gap-1.5 bg-card border border-border rounded px-2.5 py-1 text-sm">
                     {z.name}
-                    <button onClick={() => { deleteZone(z.id); setZones(getZones()); }} className="text-muted-foreground hover:text-destructive"><X className="h-3 w-3" /></button>
+                    <button onClick={async () => { await deleteZoneAsync(z.id); setZones(await getZonesAsync()); }} className="text-muted-foreground hover:text-destructive"><X className="h-3 w-3" /></button>
                   </span>
                 ))}
               </div>
@@ -269,7 +272,7 @@ export default function NetworksPage() {
                     trigger={<button className="text-muted-foreground hover:text-destructive p-1"><Trash2 className="h-4 w-4" /></button>}
                     title="Slett nettverk"
                     description={`Er du sikker på at du vil slette «${n.name}»?`}
-                    onConfirm={() => { deleteNetwork(n.id); setNetworks(getNetworks()); }}
+                    onConfirm={async () => { await deleteNetworkAsync(n.id); setNetworks(await getNetworksAsync()); }}
                   />
                 </div>
               </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { getFiles, addFile, deleteFile, type UploadedFile } from "@/lib/store";
+import { type UploadedFile } from "@/lib/store";
+import { getFilesAsync, addFileAsync, deleteFileAsync } from "@/lib/data-service";
 import { Button } from "@/components/ui/button";
 import { Upload, Trash2, Download, FolderOpen, File } from "lucide-react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -14,16 +15,16 @@ export default function FilesPage() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { setFiles(getFiles()); }, []);
+  useEffect(() => { getFilesAsync().then(f => setFiles(f)); }, []);
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = e.target.files;
     if (!fileList) return;
     Array.from(fileList).forEach(file => {
       const reader = new FileReader();
-      reader.onload = () => {
-        addFile({ name: file.name, size: file.size, type: file.type, data: reader.result as string });
-        setFiles(getFiles());
+      reader.onload = async () => {
+        await addFileAsync({ name: file.name, size: file.size, type: file.type, data: reader.result as string });
+        setFiles(await getFilesAsync());
       };
       reader.readAsDataURL(file);
     });
@@ -37,7 +38,7 @@ export default function FilesPage() {
     a.click();
   };
 
-  const handleDelete = (id: string) => { deleteFile(id); setFiles(getFiles()); };
+  const handleDelete = async (id: string) => { await deleteFileAsync(id); setFiles(await getFilesAsync()); };
 
   return (
     <div>

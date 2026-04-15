@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
-import { getDevices, addDevice, deleteDevice, updateDevice, saveDevices, getFirewalls, getNetworks, type Device, type DeviceType, type DeviceSSID, type Firewall } from "@/lib/store";
+import { useState, useEffect, useCallback } from "react";
+import { type Device, type DeviceType, type DeviceSSID, type Firewall } from "@/lib/store";
+import { getDevicesAsync, addDeviceAsync, deleteDeviceAsync, updateDeviceAsync, getFirewallsAsync, getNetworksAsync } from "@/lib/data-service";
+import { saveDevices, getNetworks, getDevices, updateDevice, getFirewalls } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Edit2, Monitor, Wifi, Server, HardDrive, Shield, Radio, X, Save, Box, Cpu, Zap, Battery, ChevronDown, ChevronRight, ArrowLeft, ExternalLink, Copy, Network, Route, Cable, Share2, List, LayoutGrid, Camera } from "lucide-react";
@@ -381,15 +383,17 @@ export default function DevicesPage() {
   const [tagsInput, setTagsInput] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "topology" | "rack">("list");
-  useEffect(() => { setDevices(getDevices()); setFirewalls(getFirewalls()); }, []);
-
-  const refreshDevices = () => {
-    const updated = getDevices();
+  const refreshDevices = useCallback(async () => {
+    const updated = await getDevicesAsync();
     setDevices(updated);
     if (selectedDevice) {
       setSelectedDevice(updated.find(d => d.id === selectedDevice.id) || null);
     }
-  };
+  }, [selectedDevice]);
+
+  useEffect(() => {
+    Promise.all([getDevicesAsync(), getFirewallsAsync()]).then(([d, f]) => { setDevices(d); setFirewalls(f); });
+  }, []);
 
   const filtered = devices.filter(d => {
     const matchText = d.name.toLowerCase().includes(filter.toLowerCase()) ||
@@ -401,16 +405,16 @@ export default function DevicesPage() {
     return matchText && matchType && matchStatus;
   });
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name || !form.ip) return;
     const tags = tagsInput.split(",").map(t => t.trim()).filter(Boolean);
     const data = { ...form, tags };
     if (editId) {
-      updateDevice(editId, data);
+      await updateDeviceAsync(editId, data);
     } else {
-      addDevice(data);
+      await addDeviceAsync(data);
     }
-    refreshDevices();
+    await refreshDevices();
     setShowForm(false);
     setEditId(null);
     setForm(emptyDevice);
@@ -437,10 +441,10 @@ export default function DevicesPage() {
     setShowAdvanced(true);
   };
 
-  const handleDelete = (id: string) => {
-    deleteDevice(id);
+  const handleDelete = async (id: string) => {
+    await deleteDeviceAsync(id);
     setSelectedDevice(null);
-    refreshDevices();
+    await refreshDevices();
   };
 
   const selectClass = "w-full h-10 rounded-md bg-secondary border border-border px-3 text-sm text-foreground";

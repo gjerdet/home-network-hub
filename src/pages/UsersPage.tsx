@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { getUsers, saveUsers, getCurrentUser, updateUser, type User } from "@/lib/store";
+import { type User, getCurrentUser } from "@/lib/store";
+import { getUsersAsync, addUserAsync, updateUserAsync, deleteUserAsync } from "@/lib/data-service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, X, Save, Users, Edit2 } from "lucide-react";
@@ -12,20 +13,19 @@ export default function UsersPage() {
   const [form, setForm] = useState({ username: "", password: "", displayName: "", email: "", role: "viewer" as User["role"] });
   const currentUser = getCurrentUser();
 
-  useEffect(() => { setUsers(getUsers()); }, []);
+  useEffect(() => { getUsersAsync().then(u => setUsers(u)); }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.username) return;
     if (editId) {
       const updates: Partial<User> = { username: form.username, displayName: form.displayName, email: form.email, role: form.role };
       if (form.password) updates.password = form.password;
-      updateUser(editId, updates);
+      await updateUserAsync(editId, updates);
     } else {
       if (!form.password) return;
-      const updated = [...users, { id: crypto.randomUUID(), ...form }];
-      saveUsers(updated);
+      await addUserAsync(form);
     }
-    setUsers(getUsers());
+    setUsers(await getUsersAsync());
     setShowForm(false);
     setEditId(null);
     setForm({ username: "", password: "", displayName: "", email: "", role: "viewer" });
@@ -37,11 +37,10 @@ export default function UsersPage() {
     setShowForm(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (id === currentUser?.id) return;
-    const updated = users.filter(u => u.id !== id);
-    saveUsers(updated);
-    setUsers(updated);
+    await deleteUserAsync(id);
+    setUsers(await getUsersAsync());
   };
 
   const isAdmin = currentUser?.role === "admin";

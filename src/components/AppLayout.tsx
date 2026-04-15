@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { Monitor, FileText, Flame, Globe, FolderOpen, Users, LogOut, Search, ChevronDown, Server, Network, Cable, MapPin, Building2, Shield, LayoutGrid, Tag, Download, Upload, LayoutDashboard, AppWindow } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate, useLocation } from "react-router-dom";
-import { logout, getCurrentUser, exportBackup, importBackup } from "@/lib/store";
+import { logout, getCurrentUser } from "@/lib/store";
+import { exportBackupAsync, importBackupAsync } from "@/lib/data-service";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
@@ -164,8 +165,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     navigate("/login");
   };
 
-  const handleExport = () => {
-    const data = exportBackup();
+  const handleExport = async () => {
+    const data = await exportBackupAsync();
     const blob = new Blob([data], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -184,9 +185,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       try {
-        importBackup(reader.result as string);
+        await importBackupAsync(reader.result as string);
         toast.success("Backup importert – laster på nytt...");
         setTimeout(() => window.location.reload(), 1000);
       } catch {

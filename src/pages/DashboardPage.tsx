@@ -18,9 +18,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { NetworkTopology } from "@/components/NetworkTopology";
 import {
-  getDevices, getNetworks, getFirewalls, getFirewallRules,
-  getDocs, getFiles,
-} from "@/lib/store";
+  getDevicesAsync, getNetworksAsync, getFirewallsAsync, getFirewallRulesAsync,
+  getDocsAsync, getFilesAsync,
+} from "@/lib/data-service";
 import type { ServiceLink } from "@/pages/ServicesPage";
 
 
@@ -98,13 +98,23 @@ export default function DashboardPage() {
   const [locked, setLocked] = useState(true);
   const [hiddenWidgets, setHiddenWidgets] = useState<string[]>(loadHidden);
 
-  const devices = useMemo(() => getDevices(), []);
-  const networks = useMemo(() => getNetworks(), []);
-  const firewalls = useMemo(() => getFirewalls(), []);
-  const rules = useMemo(() => getFirewallRules(), []);
-  const docs = useMemo(() => getDocs(), []);
-  const files = useMemo(() => getFiles(), []);
+  const [devices, setDevices] = useState<any[]>([]);
+  const [networks, setNetworks] = useState<any[]>([]);
+  const [firewalls, setFirewalls] = useState<any[]>([]);
+  const [rules, setRules] = useState<any[]>([]);
+  const [docs, setDocs] = useState<any[]>([]);
+  const [files, setFiles] = useState<any[]>([]);
   const services = useMemo(() => getServices(), []);
+
+  useEffect(() => {
+    Promise.all([
+      getDevicesAsync(), getNetworksAsync(), getFirewallsAsync(),
+      getFirewallRulesAsync(), getDocsAsync(), getFilesAsync(),
+    ]).then(([d, n, fw, r, doc, f]) => {
+      setDevices(d); setNetworks(n); setFirewalls(fw);
+      setRules(r); setDocs(doc); setFiles(f);
+    });
+  }, []);
 
   const online = devices.filter(d => d.status === "online").length;
   const offline = devices.filter(d => d.status === "offline").length;

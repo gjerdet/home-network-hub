@@ -2,7 +2,8 @@ import { useState, useRef } from "react";
 import { Monitor, FileText, Flame, Globe, FolderOpen, Users, LogOut, Download, Upload } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
-import { logout, exportBackup, importBackup } from "@/lib/store";
+import { logout } from "@/lib/store";
+import { exportBackupAsync, importBackupAsync } from "@/lib/data-service";
 import { toast } from "sonner";
 import {
   Sidebar,
@@ -36,8 +37,8 @@ export function AppSidebar() {
     navigate("/login");
   };
 
-  const handleExport = () => {
-    const data = exportBackup();
+  const handleExport = async () => {
+    const data = await exportBackupAsync();
     const blob = new Blob([data], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -52,9 +53,9 @@ export function AppSidebar() {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       try {
-        importBackup(reader.result as string);
+        await importBackupAsync(reader.result as string);
         toast.success("Backup importert – laster på nytt...");
         setTimeout(() => window.location.reload(), 1000);
       } catch {

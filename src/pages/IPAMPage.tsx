@@ -4,7 +4,8 @@ import {
   getIPAddresses, addIPAddress, deleteIPAddress, updateIPAddress, type IPAddress,
   getVLANs, addVLAN, deleteVLAN, updateVLAN, type VLAN,
 } from "@/lib/ipam";
-import { getDevices, type Device } from "@/lib/store";
+import { type Device } from "@/lib/store";
+import { getDevicesAsync } from "@/lib/data-service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SubNav } from "@/components/SubNav";
@@ -42,8 +43,8 @@ export default function IPAMPage() {
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
 
-  const reload = () => { setPrefixes(getPrefixes()); setIPs(getIPAddresses()); setVLANs(getVLANs()); setDevices(getDevices()); };
-  useEffect(reload, []);
+  const reload = async () => { setPrefixes(getPrefixes()); setIPs(getIPAddresses()); setVLANs(getVLANs()); setDevices(await getDevicesAsync()); };
+  useEffect(() => { reload(); }, []);
 
   // Prefix form
   const emptyPrefix = { prefix: "", description: "", site: "", vlan: "", status: "active" as Prefix["status"], isPool: false, tenant: "", tags: "" };
