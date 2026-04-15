@@ -1,12 +1,12 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-import RGL from "react-grid-layout";
+import * as RGL from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import type { LayoutItem } from "react-grid-layout";
 
-const ResponsiveGridLayout = (RGL as any).WidthProvider((RGL as any).Responsive);
+const DashboardGrid = (RGL as any).ResponsiveGridLayout;
+
 import {
   Monitor, Globe, Flame, FileText, Server, Shield, Wifi,
   HardDrive, Activity, AlertTriangle, CheckCircle2, Clock,
@@ -413,12 +413,13 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <ResponsiveGridLayout
+      <DashboardGrid
         className="dashboard-grid"
         layouts={layouts}
         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
         cols={{ lg: 12, md: 12, sm: 6, xs: 4, xxs: 2 }}
         rowHeight={30}
+        width={1200}
         isDraggable={!locked}
         isResizable={!locked}
         onLayoutChange={onLayoutChange}
@@ -451,7 +452,7 @@ export default function DashboardPage() {
             </Card>
           </div>
         ))}
-      </ResponsiveGridLayout>
+      </DashboardGrid>
     </div>
   );
 }
