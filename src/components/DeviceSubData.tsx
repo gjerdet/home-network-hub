@@ -1,8 +1,17 @@
 import { useState, useEffect } from "react";
-import { type Device, type DeviceInterface, type DeviceRoute, type DeviceCable, updateDevice, getDevices, getNetworks } from "@/lib/store";
-// Note: DeviceSubData still uses sync store for sub-entity updates (interfaces, routes, cables)
-// These are nested updates on the device object and work fine with localStorage
-// The parent component handles the async loading
+import { type Device, type DeviceInterface, type DeviceRoute, type DeviceCable } from "@/lib/store";
+import { getDevicesAsync, updateDeviceAsync, getNetworksAsync } from "@/lib/data-service";
+
+// Local helpers that route through the async data-service (API in Docker, localStorage in dev).
+// We keep the call sites synchronous-looking by firing the promise and refreshing via onUpdate().
+let _cachedDevices: Device[] = [];
+let _cachedNetworks: ReturnType<typeof Array> extends never ? never : any[] = [];
+const getDevices = () => _cachedDevices;
+const getNetworks = () => _cachedNetworks as any[];
+const updateDevice = (id: string, updates: Partial<Device>) => {
+  // Fire-and-forget; caller invokes onUpdate() which re-fetches from the source of truth.
+  void updateDeviceAsync(id, updates);
+};
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Save, X, Network, Route, Cable, Layers, Edit2, ChevronDown, ChevronRight, Globe, Link2, Zap } from "lucide-react";
@@ -25,6 +34,20 @@ interface Props {
 
 export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: Props) {
   const [tab, setTab] = useState<"interfaces" | "routes" | "cables">(initialTab);
+  const [, forceTick] = useState(0);
+
+  // Load devices + networks from data-service (API in Docker, localStorage otherwise) on mount + when device changes.
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([getDevicesAsync(), getNetworksAsync()]).then(([devs, nets]) => {
+      if (cancelled) return;
+      _cachedDevices = devs;
+      _cachedNetworks = nets;
+      forceTick(t => t + 1);
+    });
+    return () => { cancelled = true; };
+  }, [device.id, device.updatedAt]);
+
   const allDevices = getDevices().filter(d => d.id !== device.id);
   const networks = getNetworks();
   const availableVlans = networks.filter(n => n.vlan).map(n => ({ vlan: n.vlan!, name: n.name }));
