@@ -1,8 +1,17 @@
 import { useState, useEffect } from "react";
-import { type Device, type DeviceInterface, type DeviceRoute, type DeviceCable, updateDevice, getDevices, getNetworks } from "@/lib/store";
-// Note: DeviceSubData still uses sync store for sub-entity updates (interfaces, routes, cables)
-// These are nested updates on the device object and work fine with localStorage
-// The parent component handles the async loading
+import { type Device, type DeviceInterface, type DeviceRoute, type DeviceCable } from "@/lib/store";
+import { getDevicesAsync, updateDeviceAsync, getNetworksAsync } from "@/lib/data-service";
+
+// Local helpers that route through the async data-service (API in Docker, localStorage in dev).
+// We keep the call sites synchronous-looking by firing the promise and refreshing via onUpdate().
+let _cachedDevices: Device[] = [];
+let _cachedNetworks: ReturnType<typeof Array> extends never ? never : any[] = [];
+const getDevices = () => _cachedDevices;
+const getNetworks = () => _cachedNetworks as any[];
+const updateDevice = (id: string, updates: Partial<Device>) => {
+  // Fire-and-forget; caller invokes onUpdate() which re-fetches from the source of truth.
+  void updateDeviceAsync(id, updates);
+};
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Save, X, Network, Route, Cable, Layers, Edit2, ChevronDown, ChevronRight, Globe, Link2, Zap } from "lucide-react";
