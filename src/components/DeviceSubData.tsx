@@ -34,6 +34,20 @@ interface Props {
 
 export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: Props) {
   const [tab, setTab] = useState<"interfaces" | "routes" | "cables">(initialTab);
+  const [, forceTick] = useState(0);
+
+  // Load devices + networks from data-service (API in Docker, localStorage otherwise) on mount + when device changes.
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([getDevicesAsync(), getNetworksAsync()]).then(([devs, nets]) => {
+      if (cancelled) return;
+      _cachedDevices = devs;
+      _cachedNetworks = nets;
+      forceTick(t => t + 1);
+    });
+    return () => { cancelled = true; };
+  }, [device.id, device.updatedAt]);
+
   const allDevices = getDevices().filter(d => d.id !== device.id);
   const networks = getNetworks();
   const availableVlans = networks.filter(n => n.vlan).map(n => ({ vlan: n.vlan!, name: n.name }));
