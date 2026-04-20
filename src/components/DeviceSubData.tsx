@@ -14,6 +14,7 @@ const updateDevice = async (id: string, updates: Partial<Device>) => {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Save, X, Network, Route, Cable, Layers, Edit2, ChevronDown, ChevronRight, Globe, Link2, Zap } from "lucide-react";
+import { toast } from "sonner";
 
 const ifaceTypes = ["ethernet", "wifi", "vlan", "bridge", "bond", "loopback", "tunnel", "lag", "other"] as const;
 const ifaceModes = ["access", "trunk", "hybrid", "routed"] as const;
@@ -146,41 +147,65 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
   };
 
   const addInterface = async () => {
-    if (!ifForm.name) return;
-    const newInterface: DeviceInterface = { id: crypto.randomUUID(), ...ifForm };
-    await updateDevice(device.id, { interfaces: [...(device.interfaces || []), newInterface] });
-    await syncReverseInterfaceLink({ nextInterface: newInterface });
-    await onUpdate();
-    setShowIfForm(false);
-    setIfForm({ name: "", type: "ethernet", ip: "", mac: "", speed: "", enabled: true, description: "", connectedTo: "", connectedToInterface: "", vlanId: "" });
+    if (!ifForm.name) {
+      toast.error("Navn på grensesnitt er påkrevd");
+      return;
+    }
+    try {
+      const newInterface: DeviceInterface = { id: crypto.randomUUID(), ...ifForm };
+      await updateDevice(device.id, { interfaces: [...(device.interfaces || []), newInterface] });
+      await syncReverseInterfaceLink({ nextInterface: newInterface });
+      await onUpdate();
+      setShowIfForm(false);
+      setIfForm({ name: "", type: "ethernet", ip: "", mac: "", speed: "", enabled: true, description: "", connectedTo: "", connectedToInterface: "", vlanId: "" });
+      toast.success("Grensesnitt lagt til");
+    } catch (e) {
+      console.error("Failed to add interface:", e);
+      toast.error(`Kunne ikke legge til grensesnitt: ${e instanceof Error ? e.message : "ukjent feil"}`);
+    }
   };
 
   const addBulkInterfaces = async () => {
-    if (!bulkForm.prefix || bulkForm.count < 1) return;
-    const existing = device.interfaces || [];
-    const newIfaces: DeviceInterface[] = [];
-    for (let i = 0; i < bulkForm.count; i++) {
-      newIfaces.push({
-        id: crypto.randomUUID(),
-        name: `${bulkForm.prefix}${bulkForm.start + i}`,
-        type: bulkForm.type,
-        speed: bulkForm.speed,
-        enabled: true,
-        ip: "", mac: "", description: "", connectedTo: "", connectedToInterface: "", vlanId: "",
-      });
+    if (!bulkForm.prefix || bulkForm.count < 1) {
+      toast.error("Prefiks og antall er påkrevd");
+      return;
     }
-    await updateDevice(device.id, { interfaces: [...existing, ...newIfaces] });
-    await onUpdate();
-    setShowBulkForm(false);
+    try {
+      const existing = device.interfaces || [];
+      const newIfaces: DeviceInterface[] = [];
+      for (let i = 0; i < bulkForm.count; i++) {
+        newIfaces.push({
+          id: crypto.randomUUID(),
+          name: `${bulkForm.prefix}${bulkForm.start + i}`,
+          type: bulkForm.type,
+          speed: bulkForm.speed,
+          enabled: true,
+          ip: "", mac: "", description: "", connectedTo: "", connectedToInterface: "", vlanId: "",
+        });
+      }
+      await updateDevice(device.id, { interfaces: [...existing, ...newIfaces] });
+      await onUpdate();
+      setShowBulkForm(false);
+      toast.success(`${bulkForm.count} grensesnitt opprettet`);
+    } catch (e) {
+      console.error("Failed to add bulk interfaces:", e);
+      toast.error(`Kunne ikke opprette grensesnitt: ${e instanceof Error ? e.message : "ukjent feil"}`);
+    }
   };
 
   const removeInterface = async (id: string) => {
-    const interfaceToRemove = (device.interfaces || []).find(i => i.id === id);
-    if (interfaceToRemove) {
-      await syncReverseInterfaceLink({ previousInterface: interfaceToRemove });
+    try {
+      const interfaceToRemove = (device.interfaces || []).find(i => i.id === id);
+      if (interfaceToRemove) {
+        await syncReverseInterfaceLink({ previousInterface: interfaceToRemove });
+      }
+      await updateDevice(device.id, { interfaces: (device.interfaces || []).filter(i => i.id !== id) });
+      await onUpdate();
+      toast.success("Grensesnitt slettet");
+    } catch (e) {
+      console.error("Failed to remove interface:", e);
+      toast.error(`Kunne ikke slette grensesnitt: ${e instanceof Error ? e.message : "ukjent feil"}`);
     }
-    await updateDevice(device.id, { interfaces: (device.interfaces || []).filter(i => i.id !== id) });
-    await onUpdate();
   };
 
   const startEditIface = (iface: DeviceInterface) => {
@@ -193,13 +218,19 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
     const previousInterface = (device.interfaces || []).find(i => i.id === editingIfaceId);
     if (!previousInterface) return;
 
-    const nextInterface: DeviceInterface = { ...previousInterface, ...editIfForm };
-    const ifaces = (device.interfaces || []).map(i => i.id === editingIfaceId ? nextInterface : i);
-    await updateDevice(device.id, { interfaces: ifaces });
-    await syncReverseInterfaceLink({ previousInterface, nextInterface });
-    await onUpdate();
-    setEditingIfaceId(null);
-    setEditIfForm({});
+    try {
+      const nextInterface: DeviceInterface = { ...previousInterface, ...editIfForm };
+      const ifaces = (device.interfaces || []).map(i => i.id === editingIfaceId ? nextInterface : i);
+      await updateDevice(device.id, { interfaces: ifaces });
+      await syncReverseInterfaceLink({ previousInterface, nextInterface });
+      await onUpdate();
+      setEditingIfaceId(null);
+      setEditIfForm({});
+      toast.success("Grensesnitt oppdatert");
+    } catch (e) {
+      console.error("Failed to update interface:", e);
+      toast.error(`Kunne ikke oppdatere grensesnitt: ${e instanceof Error ? e.message : "ukjent feil"}`);
+    }
   };
 
   // Routes
@@ -208,8 +239,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
 
   const addRoute = async () => {
     if (!routeForm.destination || !routeForm.gateway) return;
-    const routes = [...(device.routes || []), { id: crypto.randomUUID(), ...routeForm }];
-    await updateDevice(device.id, { routes: routes });
+    await updateDevice(device.id, { routes: [...(device.routes || []), { id: crypto.randomUUID(), ...routeForm }] });
     await onUpdate();
     setShowRouteForm(false);
     setRouteForm({ destination: "", gateway: "", metric: undefined, interface: "", description: "" });
