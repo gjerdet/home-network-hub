@@ -14,6 +14,7 @@ const updateDevice = async (id: string, updates: Partial<Device>) => {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Save, X, Network, Route, Cable, Layers, Edit2, ChevronDown, ChevronRight, Globe, Link2, Zap } from "lucide-react";
+import { toast } from "sonner";
 
 const ifaceTypes = ["ethernet", "wifi", "vlan", "bridge", "bond", "loopback", "tunnel", "lag", "other"] as const;
 const ifaceModes = ["access", "trunk", "hybrid", "routed"] as const;
