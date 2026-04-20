@@ -10,6 +10,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { NetworkTopology } from "@/components/NetworkTopology";
 import { RackView } from "@/components/RackView";
 import { SubNav } from "@/components/SubNav";
+import { toast } from "sonner";
 
 const typeIcons: Record<DeviceType, React.ReactNode> = {
   router: <Wifi className="h-4 w-4" />, switch: <Monitor className="h-4 w-4" />, server: <Server className="h-4 w-4" />,
@@ -406,20 +407,30 @@ export default function DevicesPage() {
   });
 
   const handleSave = async () => {
-    if (!form.name || !form.ip) return;
+    if (!form.name || !form.ip) {
+      toast.error("Navn og IP er påkrevd");
+      return;
+    }
     const tags = tagsInput.split(",").map(t => t.trim()).filter(Boolean);
     const data = { ...form, tags };
-    if (editId) {
-      await updateDeviceAsync(editId, data);
-    } else {
-      await addDeviceAsync(data);
+    try {
+      if (editId) {
+        await updateDeviceAsync(editId, data);
+        toast.success("Enhet oppdatert");
+      } else {
+        await addDeviceAsync(data);
+        toast.success("Enhet lagt til");
+      }
+      await refreshDevices();
+      setShowForm(false);
+      setEditId(null);
+      setForm(emptyDevice);
+      setTagsInput("");
+      setShowAdvanced(false);
+    } catch (e) {
+      console.error("Failed to save device:", e);
+      toast.error(`Kunne ikke lagre enhet: ${e instanceof Error ? e.message : "ukjent feil"}`);
     }
-    await refreshDevices();
-    setShowForm(false);
-    setEditId(null);
-    setForm(emptyDevice);
-    setTagsInput("");
-    setShowAdvanced(false);
   };
 
   const handleEdit = (d: Device) => {
