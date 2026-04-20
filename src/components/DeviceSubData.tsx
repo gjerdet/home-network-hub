@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { type Device, type DeviceInterface, type DeviceRoute, type DeviceCable } from "@/lib/store";
+import { generateId, type Device, type DeviceInterface, type DeviceRoute, type DeviceCable } from "@/lib/store";
 import { getDevicesAsync, updateDeviceAsync, getNetworksAsync } from "@/lib/data-service";
 
 // Local helpers that route through the async data-service (API in Docker, localStorage in dev).
@@ -152,7 +152,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
       return;
     }
     try {
-      const newInterface: DeviceInterface = { id: crypto.randomUUID(), ...ifForm };
+      const newInterface: DeviceInterface = { id: generateId(), ...ifForm };
       await updateDevice(device.id, { interfaces: [...(device.interfaces || []), newInterface] });
       await syncReverseInterfaceLink({ nextInterface: newInterface });
       await onUpdate();
@@ -175,7 +175,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
       const newIfaces: DeviceInterface[] = [];
       for (let i = 0; i < bulkForm.count; i++) {
         newIfaces.push({
-          id: crypto.randomUUID(),
+          id: generateId(),
           name: `${bulkForm.prefix}${bulkForm.start + i}`,
           type: bulkForm.type,
           speed: bulkForm.speed,
@@ -239,7 +239,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
 
   const addRoute = async () => {
     if (!routeForm.destination || !routeForm.gateway) return;
-    await updateDevice(device.id, { routes: [...(device.routes || []), { id: crypto.randomUUID(), ...routeForm }] });
+    await updateDevice(device.id, { routes: [...(device.routes || []), { id: generateId(), ...routeForm }] });
     await onUpdate();
     setShowRouteForm(false);
     setRouteForm({ destination: "", gateway: "", metric: undefined, interface: "", description: "" });
@@ -256,7 +256,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
 
   const addCable = async () => {
     if (!cableForm.localPort || !cableForm.remoteDevice) return;
-    const cableId = crypto.randomUUID();
+    const cableId = generateId();
     const cables = [...(device.cables || []), { id: cableId, ...cableForm }];
     await updateDevice(device.id, { cables });
 
@@ -264,7 +264,7 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
       const remoteDevice = getDevices().find(d => d.id === cableForm.remoteDevice);
       if (remoteDevice) {
         const reverseCable: DeviceCable = {
-          id: crypto.randomUUID(),
+          id: generateId(),
           label: cableForm.label,
           type: cableForm.type,
           localPort: cableForm.remotePort,
