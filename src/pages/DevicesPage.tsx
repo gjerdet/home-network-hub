@@ -10,6 +10,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { NetworkTopology } from "@/components/NetworkTopology";
 import { RackView } from "@/components/RackView";
 import { SubNav } from "@/components/SubNav";
+import { toast } from "sonner";
 
 const typeIcons: Record<DeviceType, React.ReactNode> = {
   router: <Wifi className="h-4 w-4" />, switch: <Monitor className="h-4 w-4" />, server: <Server className="h-4 w-4" />,
