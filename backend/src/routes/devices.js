@@ -30,9 +30,17 @@ export function deviceRoutes(pool) {
   r.put("/:id", async (req, res) => {
     try {
       const { id, createdAt, updatedAt, ...data } = req.body;
+      const existing = await pool.query("SELECT data FROM devices WHERE id = $1", [req.params.id]);
+
+      if (existing.rowCount === 0) {
+        return res.status(404).json({ error: "Device not found" });
+      }
+
+      const mergedData = { ...existing.rows[0].data, ...data };
+
       await pool.query(
         "UPDATE devices SET data = $1, updated_at = now() WHERE id = $2",
-        [data, req.params.id]
+        [mergedData, req.params.id]
       );
       res.json({ ok: true });
     } catch (e) {
