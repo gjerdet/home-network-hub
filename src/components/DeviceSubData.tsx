@@ -3,14 +3,13 @@ import { type Device, type DeviceInterface, type DeviceRoute, type DeviceCable }
 import { getDevicesAsync, updateDeviceAsync, getNetworksAsync } from "@/lib/data-service";
 
 // Local helpers that route through the async data-service (API in Docker, localStorage in dev).
-// We keep the call sites synchronous-looking by firing the promise and refreshing via onUpdate().
 let _cachedDevices: Device[] = [];
 let _cachedNetworks: ReturnType<typeof Array> extends never ? never : any[] = [];
 const getDevices = () => _cachedDevices;
 const getNetworks = () => _cachedNetworks as any[];
-const updateDevice = (id: string, updates: Partial<Device>) => {
-  // Fire-and-forget; caller invokes onUpdate() which re-fetches from the source of truth.
-  void updateDeviceAsync(id, updates);
+const updateDevice = async (id: string, updates: Partial<Device>) => {
+  await updateDeviceAsync(id, updates);
+  _cachedDevices = await getDevicesAsync();
 };
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
