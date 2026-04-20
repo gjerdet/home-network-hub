@@ -71,19 +71,19 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
     return found ? found.name : ref;
   };
 
-  const syncReverseInterfaceLink = ({
+  const syncReverseInterfaceLink = async ({
     previousInterface,
     nextInterface,
   }: {
     previousInterface?: DeviceInterface;
     nextInterface?: DeviceInterface;
   }) => {
-    const clearRemoteLink = (remoteDeviceId?: string, remoteInterfaceName?: string, localInterfaceName?: string) => {
+    const clearRemoteLink = async (remoteDeviceId?: string, remoteInterfaceName?: string, localInterfaceName?: string) => {
       if (!remoteDeviceId || !remoteInterfaceName || !localInterfaceName) return;
       const remoteDevice = getDevices().find(d => d.id === remoteDeviceId);
       if (!remoteDevice?.interfaces?.length) return;
 
-      updateDevice(remoteDeviceId, {
+      await updateDevice(remoteDeviceId, {
         interfaces: remoteDevice.interfaces.map(iface =>
           iface.name === remoteInterfaceName &&
           iface.connectedTo === device.id &&
@@ -94,12 +94,12 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
       });
     };
 
-    const setRemoteLink = (remoteDeviceId?: string, remoteInterfaceName?: string, localInterfaceName?: string) => {
+    const setRemoteLink = async (remoteDeviceId?: string, remoteInterfaceName?: string, localInterfaceName?: string) => {
       if (!remoteDeviceId || !remoteInterfaceName || !localInterfaceName) return;
       const remoteDevice = getDevices().find(d => d.id === remoteDeviceId);
       if (!remoteDevice?.interfaces?.length) return;
 
-      updateDevice(remoteDeviceId, {
+      await updateDevice(remoteDeviceId, {
         interfaces: remoteDevice.interfaces.map(iface =>
           iface.name === remoteInterfaceName
             ? { ...iface, connectedTo: device.id, connectedToInterface: localInterfaceName }
@@ -117,12 +117,32 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
         previousInterface.name !== nextInterface?.name
       )
     ) {
-      clearRemoteLink(previousInterface.connectedTo, previousInterface.connectedToInterface, previousInterface.name);
+      await clearRemoteLink(previousInterface.connectedTo, previousInterface.connectedToInterface, previousInterface.name);
     }
 
     if (nextInterface?.connectedTo && nextInterface.connectedToInterface) {
-      setRemoteLink(nextInterface.connectedTo, nextInterface.connectedToInterface, nextInterface.name);
+      await setRemoteLink(nextInterface.connectedTo, nextInterface.connectedToInterface, nextInterface.name);
     }
+  };
+
+  const getNextStart = (prefix: string) => {
+    const existing = device.interfaces || [];
+    let maxNum = -1;
+    existing.forEach(iface => {
+      if (iface.name.startsWith(prefix)) {
+        const numPart = iface.name.slice(prefix.length);
+        const num = parseInt(numPart);
+        if (!isNaN(num) && num > maxNum) maxNum = num;
+      }
+    });
+    return maxNum + 1;
+  };
+
+  const openBulkForm = () => {
+    const prefix = bulkForm.prefix || "eth";
+    const nextStart = getNextStart(prefix);
+    setBulkForm(f => ({ ...f, prefix, start: nextStart }));
+    setShowBulkForm(true);
   };
 
   const addInterface = async () => {
