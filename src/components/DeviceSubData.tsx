@@ -3,14 +3,13 @@ import { type Device, type DeviceInterface, type DeviceRoute, type DeviceCable }
 import { getDevicesAsync, updateDeviceAsync, getNetworksAsync } from "@/lib/data-service";
 
 // Local helpers that route through the async data-service (API in Docker, localStorage in dev).
-// We keep the call sites synchronous-looking by firing the promise and refreshing via onUpdate().
 let _cachedDevices: Device[] = [];
 let _cachedNetworks: ReturnType<typeof Array> extends never ? never : any[] = [];
 const getDevices = () => _cachedDevices;
 const getNetworks = () => _cachedNetworks as any[];
-const updateDevice = (id: string, updates: Partial<Device>) => {
-  // Fire-and-forget; caller invokes onUpdate() which re-fetches from the source of truth.
-  void updateDeviceAsync(id, updates);
+const updateDevice = async (id: string, updates: Partial<Device>) => {
+  await updateDeviceAsync(id, updates);
+  _cachedDevices = await getDevicesAsync();
 };
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,19 +71,19 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
     return found ? found.name : ref;
   };
 
-  const syncReverseInterfaceLink = ({
+  const syncReverseInterfaceLink = async ({
     previousInterface,
     nextInterface,
   }: {
     previousInterface?: DeviceInterface;
     nextInterface?: DeviceInterface;
   }) => {
-    const clearRemoteLink = (remoteDeviceId?: string, remoteInterfaceName?: string, localInterfaceName?: string) => {
+    const clearRemoteLink = async (remoteDeviceId?: string, remoteInterfaceName?: string, localInterfaceName?: string) => {
       if (!remoteDeviceId || !remoteInterfaceName || !localInterfaceName) return;
       const remoteDevice = getDevices().find(d => d.id === remoteDeviceId);
       if (!remoteDevice?.interfaces?.length) return;
 
-      updateDevice(remoteDeviceId, {
+      await updateDevice(remoteDeviceId, {
         interfaces: remoteDevice.interfaces.map(iface =>
           iface.name === remoteInterfaceName &&
           iface.connectedTo === device.id &&
@@ -95,12 +94,12 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
       });
     };
 
-    const setRemoteLink = (remoteDeviceId?: string, remoteInterfaceName?: string, localInterfaceName?: string) => {
+    const setRemoteLink = async (remoteDeviceId?: string, remoteInterfaceName?: string, localInterfaceName?: string) => {
       if (!remoteDeviceId || !remoteInterfaceName || !localInterfaceName) return;
       const remoteDevice = getDevices().find(d => d.id === remoteDeviceId);
       if (!remoteDevice?.interfaces?.length) return;
 
-      updateDevice(remoteDeviceId, {
+      await updateDevice(remoteDeviceId, {
         interfaces: remoteDevice.interfaces.map(iface =>
           iface.name === remoteInterfaceName
             ? { ...iface, connectedTo: device.id, connectedToInterface: localInterfaceName }
@@ -118,45 +117,14 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
         previousInterface.name !== nextInterface?.name
       )
     ) {
-      clearRemoteLink(previousInterface.connectedTo, previousInterface.connectedToInterface, previousInterface.name);
+      await clearRemoteLink(previousInterface.connectedTo, previousInterface.connectedToInterface, previousInterface.name);
     }
 
     if (nextInterface?.connectedTo && nextInterface.connectedToInterface) {
-      setRemoteLink(nextInterface.connectedTo, nextInterface.connectedToInterface, nextInterface.name);
+      await setRemoteLink(nextInterface.connectedTo, nextInterface.connectedToInterface, nextInterface.name);
     }
   };
 
-  const addInterface = () => {
-    if (!ifForm.name) return;
-    const newInterface: DeviceInterface = { id: crypto.randomUUID(), ...ifForm };
-    updateDevice(device.id, { interfaces: [...(device.interfaces || []), newInterface] });
-    syncReverseInterfaceLink({ nextInterface: newInterface });
-    onUpdate();
-    setShowIfForm(false);
-    setIfForm({ name: "", type: "ethernet", ip: "", mac: "", speed: "", enabled: true, description: "", connectedTo: "", connectedToInterface: "", vlanId: "" });
-  };
-
-  const addBulkInterfaces = () => {
-    if (!bulkForm.prefix || bulkForm.count < 1) return;
-    const existing = device.interfaces || [];
-    const newIfaces: DeviceInterface[] = [];
-    // Use the actual start number from the form
-    for (let i = 0; i < bulkForm.count; i++) {
-      newIfaces.push({
-        id: crypto.randomUUID(),
-        name: `${bulkForm.prefix}${bulkForm.start + i}`,
-        type: bulkForm.type,
-        speed: bulkForm.speed,
-        enabled: true,
-        ip: "", mac: "", description: "", connectedTo: "", connectedToInterface: "", vlanId: "",
-      });
-    }
-    updateDevice(device.id, { interfaces: [...existing, ...newIfaces] });
-    onUpdate();
-    setShowBulkForm(false);
-  };
-
-  // Calculate next available start number based on existing interfaces with same prefix
   const getNextStart = (prefix: string) => {
     const existing = device.interfaces || [];
     let maxNum = -1;
@@ -177,13 +145,42 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
     setShowBulkForm(true);
   };
 
-  const removeInterface = (id: string) => {
+  const addInterface = async () => {
+    if (!ifForm.name) return;
+    const newInterface: DeviceInterface = { id: crypto.randomUUID(), ...ifForm };
+    await updateDevice(device.id, { interfaces: [...(device.interfaces || []), newInterface] });
+    await syncReverseInterfaceLink({ nextInterface: newInterface });
+    await onUpdate();
+    setShowIfForm(false);
+    setIfForm({ name: "", type: "ethernet", ip: "", mac: "", speed: "", enabled: true, description: "", connectedTo: "", connectedToInterface: "", vlanId: "" });
+  };
+
+  const addBulkInterfaces = async () => {
+    if (!bulkForm.prefix || bulkForm.count < 1) return;
+    const existing = device.interfaces || [];
+    const newIfaces: DeviceInterface[] = [];
+    for (let i = 0; i < bulkForm.count; i++) {
+      newIfaces.push({
+        id: crypto.randomUUID(),
+        name: `${bulkForm.prefix}${bulkForm.start + i}`,
+        type: bulkForm.type,
+        speed: bulkForm.speed,
+        enabled: true,
+        ip: "", mac: "", description: "", connectedTo: "", connectedToInterface: "", vlanId: "",
+      });
+    }
+    await updateDevice(device.id, { interfaces: [...existing, ...newIfaces] });
+    await onUpdate();
+    setShowBulkForm(false);
+  };
+
+  const removeInterface = async (id: string) => {
     const interfaceToRemove = (device.interfaces || []).find(i => i.id === id);
     if (interfaceToRemove) {
-      syncReverseInterfaceLink({ previousInterface: interfaceToRemove });
+      await syncReverseInterfaceLink({ previousInterface: interfaceToRemove });
     }
-    updateDevice(device.id, { interfaces: (device.interfaces || []).filter(i => i.id !== id) });
-    onUpdate();
+    await updateDevice(device.id, { interfaces: (device.interfaces || []).filter(i => i.id !== id) });
+    await onUpdate();
   };
 
   const startEditIface = (iface: DeviceInterface) => {
@@ -191,16 +188,16 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
     setEditIfForm({ ...iface });
   };
 
-  const saveEditIface = () => {
+  const saveEditIface = async () => {
     if (!editingIfaceId) return;
     const previousInterface = (device.interfaces || []).find(i => i.id === editingIfaceId);
     if (!previousInterface) return;
 
     const nextInterface: DeviceInterface = { ...previousInterface, ...editIfForm };
     const ifaces = (device.interfaces || []).map(i => i.id === editingIfaceId ? nextInterface : i);
-    updateDevice(device.id, { interfaces: ifaces });
-    syncReverseInterfaceLink({ previousInterface, nextInterface });
-    onUpdate();
+    await updateDevice(device.id, { interfaces: ifaces });
+    await syncReverseInterfaceLink({ previousInterface, nextInterface });
+    await onUpdate();
     setEditingIfaceId(null);
     setEditIfForm({});
   };
@@ -209,32 +206,30 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
   const [showRouteForm, setShowRouteForm] = useState(false);
   const [routeForm, setRouteForm] = useState({ destination: "", gateway: "", metric: undefined as number | undefined, interface: "", description: "" });
 
-  const addRoute = () => {
+  const addRoute = async () => {
     if (!routeForm.destination || !routeForm.gateway) return;
     const routes = [...(device.routes || []), { id: crypto.randomUUID(), ...routeForm }];
-    updateDevice(device.id, { routes: routes });
-    onUpdate();
+    await updateDevice(device.id, { routes: routes });
+    await onUpdate();
     setShowRouteForm(false);
     setRouteForm({ destination: "", gateway: "", metric: undefined, interface: "", description: "" });
   };
 
-  const removeRoute = (id: string) => {
-    updateDevice(device.id, { routes: (device.routes || []).filter(r => r.id !== id) });
-    onUpdate();
+  const removeRoute = async (id: string) => {
+    await updateDevice(device.id, { routes: (device.routes || []).filter(r => r.id !== id) });
+    await onUpdate();
   };
 
   // Cables
   const [showCableForm, setShowCableForm] = useState(false);
   const [cableForm, setCableForm] = useState({ label: "", type: "cat6" as DeviceCable["type"], localPort: "", remoteDevice: "", remotePort: "", length: "", color: "", status: "connected" as DeviceCable["status"] });
 
-  const addCable = () => {
+  const addCable = async () => {
     if (!cableForm.localPort || !cableForm.remoteDevice) return;
-    // Add cable to this device
     const cableId = crypto.randomUUID();
     const cables = [...(device.cables || []), { id: cableId, ...cableForm }];
-    updateDevice(device.id, { cables });
+    await updateDevice(device.id, { cables });
 
-    // Auto-create reverse cable on remote device
     if (cableForm.remoteDevice && cableForm.remotePort) {
       const remoteDevice = getDevices().find(d => d.id === cableForm.remoteDevice);
       if (remoteDevice) {
@@ -249,35 +244,33 @@ export function DeviceSubData({ device, onUpdate, initialTab = "interfaces" }: P
           color: cableForm.color,
           status: cableForm.status,
         };
-        // Only add if not already linked
         const alreadyLinked = (remoteDevice.cables || []).some(c =>
           c.localPort === reverseCable.localPort && c.remoteDevice === device.id && c.remotePort === cableForm.localPort
         );
         if (!alreadyLinked) {
-          updateDevice(cableForm.remoteDevice, { cables: [...(remoteDevice.cables || []), reverseCable] });
+          await updateDevice(cableForm.remoteDevice, { cables: [...(remoteDevice.cables || []), reverseCable] });
         }
       }
     }
 
-    onUpdate();
+    await onUpdate();
     setShowCableForm(false);
     setCableForm({ label: "", type: "cat6", localPort: "", remoteDevice: "", remotePort: "", length: "", color: "", status: "connected" });
   };
 
-  const removeCable = (id: string) => {
+  const removeCable = async (id: string) => {
     const cable = (device.cables || []).find(c => c.id === id);
-    // Remove reverse cable on remote device
     if (cable?.remoteDevice && cable.remotePort) {
       const remoteDevice = getDevices().find(d => d.id === cable.remoteDevice);
       if (remoteDevice) {
         const updatedRemoteCables = (remoteDevice.cables || []).filter(c =>
           !(c.localPort === cable.remotePort && c.remoteDevice === device.id && c.remotePort === cable.localPort)
         );
-        updateDevice(cable.remoteDevice, { cables: updatedRemoteCables });
+        await updateDevice(cable.remoteDevice, { cables: updatedRemoteCables });
       }
     }
-    updateDevice(device.id, { cables: (device.cables || []).filter(c => c.id !== id) });
-    onUpdate();
+    await updateDevice(device.id, { cables: (device.cables || []).filter(c => c.id !== id) });
+    await onUpdate();
   };
 
   const getRemoteInterfaces = () => {
